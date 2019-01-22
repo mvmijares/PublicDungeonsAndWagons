@@ -1,0 +1,11 @@
+NPC Shopping AI 
+
+1. Walk over to shop
+2. Stop 
+3. Decide to shop ( Show a reaction to decide to shop)
+4. Look at each item
+5. Show a thinking reaction to each  (Maybe 1-2 seconds)
+6. Show a final reaction if they want to buy the item or not.
+7a. Enable a button press to talk with player, if they decide to buy.
+7b. Walk to next item if they decide not to buy (Show a reaction if they don't )
+8. Camera pan over to the NPC to start conversation

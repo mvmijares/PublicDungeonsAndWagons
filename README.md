@@ -1,2 +1,2 @@
-# PublicDungeonsAndWagons
-This is the public repository for our game, Dungeons and Wagons
+# DungeonsAndWagons
+This is our repository for our Dungeons and Wagons game.

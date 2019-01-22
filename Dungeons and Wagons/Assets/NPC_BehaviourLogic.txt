@@ -1,0 +1,2 @@
+Logic for handling behaviour is handled in the NPC class
+Each Behaviour class handles their own functionality 
