@@ -12,9 +12,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Prototypes/Overworld.unity
     guid: fd3d9f587a6d6564cb206f2acf655882
   - enabled: 1
-    path: Assets/Scenes/Game.unity
-    guid: 7e0a1e56fb34dea479812c9839d7f19f
-  - enabled: 1
-    path: Assets/Scenes/Prototypes/Trading.unity
-    guid: 0bb7583db981ec245a19d72fe2a413ec
+    path: Assets/Scenes/Final Scenes/Town.unity
+    guid: dcb9ba92ed296cb4082b997fb902ca97
   m_configObjects: {}

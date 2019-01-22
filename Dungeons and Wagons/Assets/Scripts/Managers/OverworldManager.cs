@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using Overworld;
+
 /// <summary>
 /// Used to manage the overworld scene. It is different from Game Manager
 /// - Holds information on the grid of nodes of the entire over world map
@@ -17,10 +19,10 @@ namespace Overworld {
         private InputHandler _inputHandler;
         public InputHandler inputHandler { get { return _inputHandler; } }
 
-        private Overworld.PathManager _pathManager;
-        public Overworld.PathManager pathManager { get { return _pathManager; } }
+        private PathManager _pathManager;
+        public PathManager pathManager { get { return _pathManager; } }
 
-        Overworld.UserInterface.UserInterfaceManager _userInterfaceManager;
+        OverworldInterfaceManager _overworldInterfaceManager;
 
         public Character character;
 
@@ -40,14 +42,13 @@ namespace Overworld {
         public Vector3 originalPosition; // used to zoom back out to original position.
         bool zoomCondition;
         public float zoomDistance = 0.5f; //how far we are to zoom destination
-        
-        #endregion
-        private void Awake() {
-            _inputHandler = FindObjectOfType<InputHandler>();
-            _userInterfaceManager = FindObjectOfType<Overworld.UserInterface.UserInterfaceManager>();
-            _userInterfaceManager.InitializeInterface();
-            _pathManager = FindObjectOfType<Overworld.PathManager>();
 
+        #endregion
+        public void InitializeOverworldManager(GameManager gameManager) {
+            _inputHandler = gameManager.inputHandler;
+            _overworldInterfaceManager =  FindObjectOfType<OverworldInterfaceManager>();
+            _overworldInterfaceManager.InitializeOverworldInterface(gameManager, this);
+            _pathManager = FindObjectOfType<PathManager>();
 
             selectedNode = null;
             zoomCondition = false;
@@ -84,7 +85,7 @@ namespace Overworld {
             node.NodeOnSelect(true);
             selectedNode = node;
             zoomCondition = true;
-            _userInterfaceManager.NodeWasSelected(node);
+            _overworldInterfaceManager.NodeWasSelected(node);
            
         }
         /// <summary>
@@ -145,7 +146,7 @@ namespace Overworld {
         /// Function to load into the current node map
         /// </summary>
         public void LoadIntoWorld() {
-            _userInterfaceManager.EnableLoadingScreen(true);
+            _overworldInterfaceManager.EnableLoadingScreen(true);
             StartCoroutine(BeginLoading(selectedNode.sceneName));
         }
         /// <summary>
@@ -158,10 +159,10 @@ namespace Overworld {
             operation = SceneManager.LoadSceneAsync(sceneName);
 
             while (!operation.isDone) {
-                _userInterfaceManager.loadingScreen.UpdateProgressUI(operation.progress);
+                _overworldInterfaceManager.loadingScreen.UpdateProgressUI(operation.progress);
                 yield return null;
             }
-            _userInterfaceManager.loadingScreen.UpdateProgressUI(operation.progress); // 100% completion
+            _overworldInterfaceManager.loadingScreen.UpdateProgressUI(operation.progress); // 100% completion
             operation = null;
             
         }

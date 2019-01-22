@@ -11,7 +11,7 @@ public class ButtonInterface : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [SerializeField]
     Sprite hoverImage;
 
-    private Overworld.UserInterface.UserInterfaceManager _userInterfaceManager;
+    private OverworldInterfaceManager _overworldInterfaceManager;
 
     Button button;
     Vector2 textOffset;
@@ -20,8 +20,8 @@ public class ButtonInterface : MonoBehaviour, IPointerEnterHandler, IPointerExit
     Text text;
     RectTransform textRectTransform;
 
-    public void InitializeButton(Overworld.UserInterface.UserInterfaceManager userInterfaceManager) {
-        _userInterfaceManager = userInterfaceManager;
+    public void InitializeButton(OverworldInterfaceManager overworldInterfaceManager) {
+        _overworldInterfaceManager = overworldInterfaceManager;
 
         button = GetComponent<Button>();
         if (defaultImage)

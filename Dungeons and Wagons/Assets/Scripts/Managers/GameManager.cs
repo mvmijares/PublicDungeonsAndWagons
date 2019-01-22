@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 using UserInterfaceStates;
 using Entity;
 using Entity.AI;
-
+using Overworld;
 /// <summary>
 /// Class that contains game logic, and other references to class.
 /// </summary>
@@ -24,6 +25,7 @@ using Entity.AI;
 public class GameManager : MonoBehaviour {
     #region Data
     public static GameManager gameManager = null;
+    private Scene currentScene;
 
     [SerializeField] private ItemDatabase _itemDatabase;
     public ItemDatabase itemDatabase { get { return _itemDatabase; } }
@@ -95,47 +97,98 @@ public class GameManager : MonoBehaviour {
     private EnemyManager _enemyManager;
     public EnemyManager enemyManager;
 
-    [SerializeField] private Character selectedObject;
+    [SerializeField] private Entity.Character selectedObject;
     public Level level;
 
     #endregion
     
     private void Awake() {
         //singleton
+
         if(gameManager == null) {
             gameManager = this;
             DontDestroyOnLoad(this.gameObject);
         } else {
             Destroy(this.gameObject);
         }
-
         _imageLibrary = GetComponent<ImageLibrary>();
         _itemDatabase = GetComponent<ItemDatabase>();
         _inputHandler = FindObjectOfType<InputHandler>();
-        _imageLibrary.InitializeImageLibrary();
-        _itemDatabase.InitializeItemDatabase();
         _inputHandler.InitializeInputHandler(this);
-
-        _player = FindObjectOfType<Player>();
-        _npcManager = FindObjectOfType<NPCManager>();
-        
-        _speechBubbleManager = FindObjectOfType<SpeechBubbleManager>();
-        _userInterfaceManager = FindObjectOfType<UserInterfaceManager>();
-        _dialogueManager = FindObjectOfType<DialogueManager>();
-        _playerShop = FindObjectOfType<PlayerShop>();
-
-        level = FindObjectOfType<Level>();
-        level.InitializeLevel(this);
-
-        _cam = Camera.main.GetComponent<ThirdPersonCamera>();
-        _cam.InitializeCamera(this);
-
         if (_inputHandler)
             input = _inputHandler.input;
         else {
             if (allowDebugLog)
                 Debug.Log("There is no input handler in the scene!");
         }
+    }
+    private void OnEnable() {
+        RegisterEvents();
+    }
+    private void OnDisable() {
+        DeregisterEvents();
+    }
+    private void RegisterEvents() {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void DeregisterEvents() {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (currentScene.name == "Town") { // will change this later
+            player.DeregisterEvents();
+            level.DeregisterEvents();
+        }
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+        currentScene = scene;
+        switch (scene.name) {
+            case "Overworld": {
+                    OverworldManager overworldManager = FindObjectOfType<OverworldManager>();
+                    if (overworldManager) {
+                        overworldManager.InitializeOverworldManager(this);
+                    }
+                    break;
+                }
+            case "Town": {
+                    TownLevel townLevel = FindObjectOfType<TownLevel>();
+                    if (townLevel) {
+                        level = townLevel;
+                        townLevel.InitializeLevel(this);
+                        InitializeTown();
+                    }
+                    break;
+                }
+        }
+    }
+    void InitializeTown() {
+        Debug.Log("Called");
+        _player = FindObjectOfType<Player>();
+        _npcManager = FindObjectOfType<NPCManager>();
+
+        _speechBubbleManager = FindObjectOfType<SpeechBubbleManager>();
+        _userInterfaceManager = FindObjectOfType<UserInterfaceManager>();
+        _dialogueManager = FindObjectOfType<DialogueManager>();
+        _playerShop = FindObjectOfType<PlayerShop>();
+        level = FindObjectOfType<Level>();
+        _cam = Camera.main.GetComponent<ThirdPersonCamera>();
+
+        _imageLibrary.InitializeImageLibrary();
+        _itemDatabase.InitializeItemDatabase();
+        _inputHandler = FindObjectOfType<InputHandler>();
+        _inputHandler.InitializeInputHandler(this);
+        if (_inputHandler)
+            input = _inputHandler.input;
+        else {
+            if (allowDebugLog)
+                Debug.Log("There is no input handler in the scene!");
+        }
+        if (level)
+            level.InitializeLevel(this);
+
+        if (cam)
+            _cam.InitializeCamera(this);
+
         if (_npcManager)
             _npcManager.InitializeNPCManager(this);
         else {
@@ -162,8 +215,7 @@ public class GameManager : MonoBehaviour {
         }
         if (_playerShop) {
             _playerShop.InitializePlayerShop(this, _userInterfaceManager);
-        }
-        else {
+        } else {
             if (allowDebugLog) {
                 Debug.Log("There is no Player Shop within the scene!");
             }
@@ -174,39 +226,30 @@ public class GameManager : MonoBehaviour {
             if (allowDebugLog)
                 Debug.Log("There is no User Interface Manager within the scene!");
         }
-
-        
         _setupShop = false;
         _accessingLoot = false;
         _accessingPlayerInv = false;
         _currentLootObject = null;
-    
+
         Cursor.visible = true;
         _canMove = true;
         withinShopTrigger = false;
         _talkingWithNPC = false;
-        RegisterEvents();
-    }
-
-    private void OnDestroy() {
-        DeregisterEvents();
-    }
-
-    private void RegisterEvents() {
-
-    }
-    private void DeregisterEvents() {
-        player.DeregisterEvents();
-        level.DeregisterEvents();
     }
     private void Update() {
         _inputHandler.UpdateInputControls();
-        _player.playerInput.UpdatePlayerInput();
-        level.UpdateLevel();
+        if (currentScene.name == "Town") { // will change this later
+            UpdateTownScene();
+            level.UpdateLevel();
+        }
     }
 
+    void UpdateTownScene() {
+        _player.playerInput.UpdatePlayerInput();
+    }
     private void LateUpdate() {
-        _cam.UpdatePlayerCamera();
+        if(_cam)
+            _cam.UpdatePlayerCamera();
     }
     /// <summary>
     /// Function to check if Object is within Camera view
