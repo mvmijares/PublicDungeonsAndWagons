@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class StackInterface : UserInterface {
     #region Data
-    public GameObject stackInterfaceObject;
-
     InputField inputfield;
     [SerializeField]
     Button confirmButton;
@@ -16,19 +14,19 @@ public class StackInterface : UserInterface {
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
 
-        inputfield = stackInterfaceObject.GetComponentInChildren<InputField>();
-        confirmButton = stackInterfaceObject.GetComponentInChildren<Button>();
+        inputfield = interfaceObject.GetComponentInChildren<InputField>();
+        confirmButton = interfaceObject.GetComponentInChildren<Button>();
         confirmButton.onClick.AddListener(() => ConfirmButtonWasPressed());
-        DisplayStackWindow(false);
+        EnableUserInterface(false);
     }
     public bool GetWindowStatus() {
-        return stackInterfaceObject.activeSelf;
+        return interfaceObject.activeSelf;
     }
     public void DisplayStackWindow(bool condition) {
-        if(!stackInterfaceObject.activeSelf && condition)
+        if(!interfaceObject.activeSelf && condition)
             inputfield.text = "0";
 
-        stackInterfaceObject.SetActive(condition);
+        EnableUserInterface(condition);
     }
     void ConfirmButtonWasPressed() {
         //TODO: Error throwing for user input

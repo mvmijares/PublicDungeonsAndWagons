@@ -10,13 +10,32 @@ public class UserInterface : MonoBehaviour {
     protected Canvas _canvas;
     protected GameManager _gameManager;
     protected UserInterfaceManager _userInterfaceManager;
-    protected bool init = false;
+    public GameObject interfaceObject;
+    [SerializeField] protected bool _windowStatus; //is the loot window currently open?
+    public bool windowStatus { get { return _windowStatus; } }
     #endregion
 
     public virtual void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         _gameManager = gameManager;
         _userInterfaceManager = userInterfaceManager;
         _canvas = GetComponent<Canvas>();
-        init = true;
+        RegisterEvents();
+    }
+    public virtual void OnDestroyUserInterface() {
+        DeregisterEvents();
+    }
+
+    public virtual void RegisterEvents() {
+        _gameManager.inputHandler.OnEscapeKeyPressedEvent += OnEscapeKeyPressed;
+    }
+    public virtual void DeregisterEvents() {
+        _gameManager.inputHandler.OnEscapeKeyPressedEvent -= OnEscapeKeyPressed;
+    }
+    public virtual void OnEscapeKeyPressed() { }
+    public virtual void EnableUserInterface(bool condition) {
+        if (interfaceObject) {
+            interfaceObject.SetActive(condition);
+        }
+        _windowStatus = condition;
     }
 }

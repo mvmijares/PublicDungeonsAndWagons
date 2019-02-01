@@ -23,7 +23,6 @@ public class PlayerShopData {
     public PlayerShopData(PlayerShopState state, bool setup) {
         _state = state;
         _setup = setup;
-        
         _playerWithinBox = false;
         _inventoryCount = 0;
     }
@@ -62,9 +61,8 @@ public class PlayerShop : MonoBehaviour {
     #endregion
 
     //Initialization through game manager
-    public void InitializePlayerShop(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
+    public void InitializePlayerShop(GameManager gameManager) {
         _gameManager = gameManager;
-        _userInterfaceManager = userInterfaceManager;
 
         _inventory = GetComponent<Inventory>();
         _shopItems = new List<ShopItem>();
@@ -87,7 +85,7 @@ public class PlayerShop : MonoBehaviour {
         shopData = new PlayerShopData(state, setup);
     }
 
-    private void Update() {
+    public void UpdatePlayerShop() {
         if (OnPlayerShopEvent != null) {
             shopData._state = state;
             shopData._setup = setup;
@@ -111,6 +109,7 @@ public class PlayerShop : MonoBehaviour {
             }
         }
     }
+
     /// <summary>
     /// Function to turn display the shop 
     /// </summary>

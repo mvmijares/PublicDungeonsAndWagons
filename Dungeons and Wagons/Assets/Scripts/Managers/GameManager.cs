@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -49,11 +50,7 @@ public class GameManager : MonoBehaviour {
     [SerializeField] private DialogueManager _dialogueManager;
     public DialogueManager dialogueManager { get { return _dialogueManager; } }
 
-    [SerializeField] private ThirdPersonCamera _cam;
-    public ThirdPersonCamera cam { get { return _cam; } }
 
-    [SerializeField] private Player _player;
-    public Player player { get { return _player; } }
 
     [SerializeField] private PlayerShop _playerShop; // reference to the shop once it is setup.
     public PlayerShop playerShop { get { return _playerShop; } }
@@ -71,7 +68,6 @@ public class GameManager : MonoBehaviour {
     private bool _accessingNPCInv; //NPC inventory.
     public bool accessingNPCInv { get { return _accessingNPCInv; } }
 
-    
     [Tooltip("Allows debug log calls within run time")]
     public bool allowDebugLog;
 
@@ -83,11 +79,6 @@ public class GameManager : MonoBehaviour {
     //Used for when the player sets up shop
     private bool _setupShop;
     public bool setupShop { get { return _setupShop; } }
-
-    private bool _canMove;
-    public bool canMove { get { return _canMove; } }
-    
-   
 
     public bool withinShopTrigger; // Use this to figure out if player is within the shop wireframe box.
     //Used to determine if an object is within view of camera
@@ -113,14 +104,14 @@ public class GameManager : MonoBehaviour {
         }
         _imageLibrary = GetComponent<ImageLibrary>();
         _itemDatabase = GetComponent<ItemDatabase>();
-        _inputHandler = FindObjectOfType<InputHandler>();
-        _inputHandler.InitializeInputHandler(this);
-        if (_inputHandler)
-            input = _inputHandler.input;
-        else {
-            if (allowDebugLog)
-                Debug.Log("There is no input handler in the scene!");
-        }
+        _imageLibrary.InitializeImageLibrary();
+        _itemDatabase.InitializeItemDatabase();
+
+       
+    }
+    private void OnDestroy() {
+        if(level)
+            level.DestroyLevel();
     }
     private void OnEnable() {
         RegisterEvents();
@@ -128,20 +119,18 @@ public class GameManager : MonoBehaviour {
     private void OnDisable() {
         DeregisterEvents();
     }
+
     private void RegisterEvents() {
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void DeregisterEvents() {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        if (currentScene.name == "Town") { // will change this later
-            player.DeregisterEvents();
-            level.DeregisterEvents();
-        }
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
         currentScene = scene;
+        InitializeObjects();
         switch (scene.name) {
             case "Overworld": {
                     OverworldManager overworldManager = FindObjectOfType<OverworldManager>();
@@ -151,30 +140,18 @@ public class GameManager : MonoBehaviour {
                     break;
                 }
             case "Town": {
-                    TownLevel townLevel = FindObjectOfType<TownLevel>();
-                    if (townLevel) {
-                        level = townLevel;
-                        townLevel.InitializeLevel(this);
-                        InitializeTown();
-                    }
+                    break;
+                }
+            case "Combat": {
                     break;
                 }
         }
     }
-    void InitializeTown() {
-        Debug.Log("Called");
-        _player = FindObjectOfType<Player>();
+    void InitializeObjects() {
         _npcManager = FindObjectOfType<NPCManager>();
-
         _speechBubbleManager = FindObjectOfType<SpeechBubbleManager>();
         _userInterfaceManager = FindObjectOfType<UserInterfaceManager>();
         _dialogueManager = FindObjectOfType<DialogueManager>();
-        _playerShop = FindObjectOfType<PlayerShop>();
-        level = FindObjectOfType<Level>();
-        _cam = Camera.main.GetComponent<ThirdPersonCamera>();
-
-        _imageLibrary.InitializeImageLibrary();
-        _itemDatabase.InitializeItemDatabase();
         _inputHandler = FindObjectOfType<InputHandler>();
         _inputHandler.InitializeInputHandler(this);
         if (_inputHandler)
@@ -183,11 +160,10 @@ public class GameManager : MonoBehaviour {
             if (allowDebugLog)
                 Debug.Log("There is no input handler in the scene!");
         }
+       
+        level = FindObjectOfType<Level>();
         if (level)
             level.InitializeLevel(this);
-
-        if (cam)
-            _cam.InitializeCamera(this);
 
         if (_npcManager)
             _npcManager.InitializeNPCManager(this);
@@ -201,30 +177,12 @@ public class GameManager : MonoBehaviour {
             if (allowDebugLog)
                 Debug.Log("There is no Speech Bubble Manager within the scene!");
         }
+
         if (_dialogueManager)
             _dialogueManager.InitializeDialogueManager(this);
         else {
             if (allowDebugLog)
                 Debug.Log("There is no Dialogue Manager within the scene!");
-        }
-        if (_player) {
-            _player.InitializeCharacter(this);
-        } else {
-            if (allowDebugLog)
-                Debug.Log("There is no Player within the scene!");
-        }
-        if (_playerShop) {
-            _playerShop.InitializePlayerShop(this, _userInterfaceManager);
-        } else {
-            if (allowDebugLog) {
-                Debug.Log("There is no Player Shop within the scene!");
-            }
-        }
-        if (_userInterfaceManager)
-            _userInterfaceManager.InitializeInterfaces(this);
-        else {
-            if (allowDebugLog)
-                Debug.Log("There is no User Interface Manager within the scene!");
         }
         _setupShop = false;
         _accessingLoot = false;
@@ -232,24 +190,20 @@ public class GameManager : MonoBehaviour {
         _currentLootObject = null;
 
         Cursor.visible = true;
-        _canMove = true;
-        withinShopTrigger = false;
         _talkingWithNPC = false;
     }
     private void Update() {
         _inputHandler.UpdateInputControls();
-        if (currentScene.name == "Town") { // will change this later
-            UpdateTownScene();
+        if (level)
             level.UpdateLevel();
-        }
-    }
-
-    void UpdateTownScene() {
-        _player.playerInput.UpdatePlayerInput();
+        
     }
     private void LateUpdate() {
-        if(_cam)
-            _cam.UpdatePlayerCamera();
+        if (level)
+            level.LateUpdateLevel();
+    }
+    public Type GetLevelType() {
+        return level.GetType();
     }
     /// <summary>
     /// Function to check if Object is within Camera view
@@ -264,18 +218,7 @@ public class GameManager : MonoBehaviour {
             return false;
         }
     }
-    /// <summary>
-    /// Called when the user clicks on an object that contains loot.
-    /// This will hook up the loot with the loot interface
-    /// </summary>
-    public void AccessLoot(Loot inventory) {
-        if (!_accessingLoot && !_accessingPlayerInv && !_accessingNPCInv) {
-            _userInterfaceManager.AccessLootInterface(inventory);
-            _currentLootObject = inventory;
-            _accessingLoot = true;
-            _canMove = false;
-        }
-    }
+  
     /// <summary>
     /// Access NPC inventory interface for trading
     /// </summary>
@@ -289,18 +232,17 @@ public class GameManager : MonoBehaviour {
     /// Called when we want to access our inventory interface
     /// </summary>
     public void AccessInventoryInterface(bool condition) {
+     
         if (condition) {
             if (!_accessingPlayerInv && !_accessingLoot && !_accessingNPCInv) {
                 _accessingPlayerInv = condition;
                 _userInterfaceManager.SwitchInventoryScreen(InventoryState.Inventory);
                 _userInterfaceManager.DisplayInventoryWindow(condition);
-                _canMove = false;
             }
         } else {
             _accessingPlayerInv = condition;
             _userInterfaceManager.SwitchInventoryScreen(InventoryState.None);
             _userInterfaceManager.DisplayInventoryWindow(condition);
-            _canMove = true;
         }
     }
     /// <summary>
@@ -314,40 +256,6 @@ public class GameManager : MonoBehaviour {
         GameObject clone = Instantiate(item.prefab, location, item.prefab.transform.rotation);
         clone.transform.tag = "Item";
     }
-    /// <summary>
-    /// Function for adding an item from an user interface panel
-    /// </summary>
-    /// <param name="slot"></param>
-    public void AddItemFromLootInterface(int slot) {
-        if (currentLootObject != null) {
-            AddItemToInventory(currentLootObject.inventory[slot - 1].GetCopy());
-            currentLootObject.DeleteItemSlot(slot);
-        }else {
-            Debug.Log("There is no loot object");
-        }
-    }
-    /// <summary>
-    /// Adds item to player inventory, and also updates the user interface
-    /// </summary>
-    /// <param name="item"></param>
-    void AddItemToInventory(Item item) {
-        player.inventory.AddItem(item);
-        _userInterfaceManager.lootInterface.UpdateinterfaceSlots();
-    }
-    /// <summary>
-    /// Function to call to delete item from player Inventory.
-    /// Use this method instead of direct access to player inventory to update user interface elements.
-    /// </summary>
-    /// <param name="inventorySlot">slot reference</param>
-    public void DeleteItemFromPlayerInventory(int inventorySlot) {
-        player.inventory.DeleteItemSlot(inventorySlot);
-        _userInterfaceManager.inventoryInterface.UpdateInventoryScreen(player.inventory);
-    }
-    public void DoneAccessingLoot() {
-        _currentLootObject = null;
-        _accessingLoot = false;
-    }
-
     public void SavePlayerData() {
 
     }

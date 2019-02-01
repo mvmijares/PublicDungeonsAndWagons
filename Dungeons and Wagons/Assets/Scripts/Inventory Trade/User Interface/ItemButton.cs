@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-public class ItemButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
+public class ItemButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler {
     #region Data
     [SerializeField] private GameManager _gameManager;
     [SerializeField] private UserInterfaceManager _userInterfaceManager;
@@ -42,6 +42,14 @@ public class ItemButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     public void SetInventorySlot(int num) {
         invSlot = num;
     }
+
+    public void OnPointerClick(PointerEventData pointerEventData) {
+        if(!pointerEventData.dragging && pointerEventData.button == PointerEventData.InputButton.Right) {
+            if (ItemOnRightClickEvent != null)
+                ItemOnRightClickEvent(this, invSlot);
+        }
+    }
+
     //Right click to trigger deleting item
     public void OnBeginDrag(PointerEventData pointerEventData) {
         if (_canvas == null)

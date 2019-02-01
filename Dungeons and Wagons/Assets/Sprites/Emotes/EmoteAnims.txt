@@ -1,0 +1,7 @@
+? = NPC curious about shop, approaches. Do not loop animation.
+... = Thinking emote, to be used during trading game when AI decides whether or not to purchase item. Loop animation.
+! = Alert emote, to be used when NPC decides on what item to purchase. Do not loop animation.
+x = NPC decides not to purchase item, continues shopping or leaves if no items are desireable. Do not loop animation
+Happy = NPC agrees to the haggled price. Loop animation
+Annoyed = NPC is annoyed at the suggested price, does not purchase. Loop animation
+Confused = NPC is overwhelmed at the suggested price, does not purchase. Loop animation

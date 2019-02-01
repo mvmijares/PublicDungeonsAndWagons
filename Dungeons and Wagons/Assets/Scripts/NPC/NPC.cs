@@ -19,8 +19,8 @@ namespace Entity {
 
         public List<NPCBehaviour> behaviourList;
         public AIState initialBehaviour;
-        [SerializeField]
-        NPCBehaviour currentBehaviour = null;
+
+        [SerializeField] NPCBehaviour currentBehaviour = null;
 
         public bool canTalkWith = false;
         #endregion
@@ -94,9 +94,10 @@ namespace Entity {
             currentBehaviour = GetBehaviour(behaviourType);
         }
 
-        public override void Update() {
-            base.Update();
+        public override void UpdateCharacter() {
+            base.UpdateCharacter();
             if(currentBehaviour != null) {
+                Debug.Log("Playing NPC Behaviour");
                 currentBehaviour.PlayBehaviour();
             }
         }

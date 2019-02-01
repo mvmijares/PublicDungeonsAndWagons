@@ -12,21 +12,17 @@ using UserInterfaceStates;
 /// </summary>
 public class HelpInterface : UserInterface {
     #region Data
-    PlayerShopData shopData;
-    HelpInterfaceState helpInterfaceState;
+    [SerializeField] PlayerShopData shopData;
+    [SerializeField] HelpInterfaceState helpInterfaceState;
     public Image helpImage;
-    ImageLibrary _imageLibrary;
-    [SerializeField]
-    List<Sprite> buttonSprites; // Reference to sprites used for button input
-    [SerializeField]
-    private TextMeshProUGUI _rightText;
-    private TextMeshProUGUI _leftText;
-    public GameObject interfaceObject;
+    [SerializeField] List<Sprite> buttonSprites; // Reference to sprites used for button input
+
+    [SerializeField] private TextMeshProUGUI _rightText;
+    [SerializeField] private TextMeshProUGUI _leftText;
 
     #endregion
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
-        _imageLibrary = _gameManager.imageLibrary;
         Transform[] children = interfaceObject.GetComponentsInChildren<Transform>();
         foreach(Transform t in children) {
             if (t.name == "Right Text")
@@ -41,20 +37,22 @@ public class HelpInterface : UserInterface {
 
         helpInterfaceState = HelpInterfaceState.PlayerShop; // Setup for now
         buttonSprites = new List<Sprite>();
-        buttonSprites.Add(_imageLibrary.GetSpriteReference("Keyboard_White_Space"));
-        SetGraphics(false);
+        buttonSprites.Add(gameManager.imageLibrary.GetSpriteReference("Keyboard_White_Space"));
+        EnableUserInterface(false);
     }
    
     /// <summary>
     /// Event delegate for player event.
     /// </summary>
     public void OnPlayerShopEventCalled(PlayerShopData data) {
-        shopData = data;
-        if (helpInterfaceState == HelpInterfaceState.PlayerShop) {
-            if (_userInterfaceManager.state == InventoryState.None) {
-                SetHelpInterface(data._playerWithinBox);
-            } else {
-                SetHelpInterface(data._playerWithinBox);
+        if (data != null) {
+            shopData = data;
+            if (helpInterfaceState == HelpInterfaceState.PlayerShop) {
+                if (_userInterfaceManager.state == InventoryState.None) {
+                    SetHelpInterface(data._playerWithinBox);
+                } else {
+                    SetHelpInterface(data._playerWithinBox);
+                }
             }
         }
     }
@@ -95,21 +93,21 @@ public class HelpInterface : UserInterface {
     /// <param name="playerShop"></param>
     public void StartNPCTradeEvent(PlayerShopData data) {
         SetGraphics(true);
-        helpImage.sprite = _imageLibrary.GetSpriteReference("Keyboard_White_Space");
+        helpImage.sprite = _gameManager.imageLibrary.GetSpriteReference("Keyboard_White_Space");
         SetText("Press", TextPosition.Left);
         SetText("to start trading.", TextPosition.Right);
     }
     private void EnableStartTrade(bool condition) {
         ClearText();
         SetGraphics(condition);
-        helpImage.sprite = _imageLibrary.GetSpriteReference("Keyboard_White_Space");
+        helpImage.sprite = _gameManager.imageLibrary.GetSpriteReference("Keyboard_White_Space");
         SetText("Press", TextPosition.Left);
         SetText("to start trading.", TextPosition.Right);
     }
     private void EnableShopSetup(bool condition) {
         ClearText();
         SetGraphics(condition);
-        helpImage.sprite = _imageLibrary.GetSpriteReference("Keyboard_White_Space");
+        helpImage.sprite = _gameManager.imageLibrary.GetSpriteReference("Keyboard_White_Space");
         SetText("Press", TextPosition.Left);
         SetText("to setup shop.", TextPosition.Right);
     }

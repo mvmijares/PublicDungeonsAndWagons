@@ -8,7 +8,6 @@ public class TownLevel : Level {
     #region Data
 
     public PlayerShop playerShop;
-    public Player player;
     [SerializeField] private bool actionKey;
     [SerializeField] private bool withinPlayerShop;
     PlayerShopData shopData;
@@ -24,13 +23,18 @@ public class TownLevel : Level {
 
         if (playerShop == null)
             Debug.Log("There is no Player Shop in the town level!");
+        else {
+            playerShop.InitializePlayerShop(gameManager);
+        }
 
         if (player == null)
             Debug.Log("There is no Player in the town level!");
         else {
             player.transform.position = playerSpawnLocation.position;
         }
-        
+
+        _gameManager.userInterfaceManager.InitializeInterfaces(_gameManager);
+
         shopData = new PlayerShopData();
 
         RegisterEvents();
@@ -39,21 +43,27 @@ public class TownLevel : Level {
     private void OnDestroy() {
        
     }
+
     public override void RegisterEvents() {
         base.RegisterEvents();
+        playerShop.OnPlayerShopEvent += _gameManager.userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent += _gameManager.userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent += OnPlayerShopEventCalled;
         _gameManager.inputHandler.OnActionKeyPressedEvent += OnActionKeyPressed;
     }
 
     public override void DeregisterEvents() {
         base.DeregisterEvents();
+        playerShop.OnPlayerShopEvent -= _gameManager.userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent -= _gameManager.userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent -= OnPlayerShopEventCalled;
-        
+
         _gameManager.inputHandler.OnActionKeyPressedEvent -= OnActionKeyPressed;
     }
 
     public override void UpdateLevel() {
         base.UpdateLevel();
+        playerShop.UpdatePlayerShop();
         if (playerShop != null && shopData != null) {
             if (shopData._playerWithinBox) {
                 if (actionKey) {
@@ -68,7 +78,7 @@ public class TownLevel : Level {
         base.InteractedWithNPC(npc);
        
         npc.SetNPCBehaviour(typeof(TalkBehaviour));
-        _gameManager.cam.GetComponent<ThirdPersonCamera>().target = npc.GetBodyPosition();
+        _cam.target = npc.GetBodyPosition();
         _gameManager.dialogueManager.PlayDialogue(npc);
     }
 }

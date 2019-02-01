@@ -10,6 +10,11 @@ public class NPCManager : MonoBehaviour {
     private GameManager _gameManager;
     public GameObject NPCPrefab;
     private List<NPC> NPCList;
+    public int npcListCount {
+        get {
+            return NPCList.Count;
+        }
+    }
     public Transform NPCSpawnLocation;
     public Transform shoppingDestination;
     public List<Transform> patrolPoints;
@@ -21,6 +26,7 @@ public class NPCManager : MonoBehaviour {
     public void InitializeNPCManager(GameManager gameManager) {
         _gameManager = gameManager;
         InitializeStartingNPCList();
+        NPCList = new List<NPC>();
     }
     /// <summary>
     /// Search for all NPCs in the scene and initialize them.
@@ -30,7 +36,7 @@ public class NPCManager : MonoBehaviour {
         foreach (NPC character in nonPlayerChars) {
             character.InitializeCharacter(_gameManager);
             //Will change this later
-             Physics.IgnoreCollision(character.GetComponent<Collider>(), _gameManager.player.GetComponent<Collider>());
+             Physics.IgnoreCollision(character.GetComponent<Collider>(), _gameManager.level.player.GetComponent<Collider>());
         }
         
         patrolPointsDictionary = new Dictionary<string, Transform>();
@@ -57,6 +63,7 @@ public class NPCManager : MonoBehaviour {
                     break;
                 }
         }
+        NPCList.Add(npc);
     }
     void SetupPatrolNPC(NPC npc) {
         npc.initialBehaviour = AIState.Patrol;
@@ -72,5 +79,13 @@ public class NPCManager : MonoBehaviour {
     }
     public void CreateNPCsForTrade() {
         SpawnNewNPC(NPCSpawnLocation.position, AIState.Shop);
+    }
+
+    public void UpdateNPCList() {
+        if(NPCList.Count > 0) {
+            foreach(NPC n in NPCList) {
+                n.UpdateCharacter();
+            }
+        }
     }
 }

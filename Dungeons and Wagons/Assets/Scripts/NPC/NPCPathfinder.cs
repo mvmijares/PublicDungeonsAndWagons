@@ -12,9 +12,8 @@ namespace Entity {
         #region Data
         private GameManager _gameManager;
         private Transform targetPosition;
-        private NPC _npc;
-        private NPCController _npcController;
-        private NPCBehaviour _npcBehaviour;
+        private Character owner;
+        private Controller characterController;
         private Seeker seeker;
 
         public Path path;
@@ -35,11 +34,10 @@ namespace Entity {
         public event Action<bool> EndOfPathReachedEvent;
         #endregion
 
-        public void InitializePathfinder(GameManager gameManager, NPC npc) {
+        public void InitializePathfinder(GameManager gameManager, Character character) {
             _gameManager = gameManager;
-            _npc = npc;
-            _npcController = GetComponent<NPCController>();
-            _npcBehaviour = GetComponent<NPCBehaviour>();
+            owner = character;
+            characterController = GetComponent<Controller>();
             seeker = GetComponent<Seeker>();
             reachedEndofPath = false;
             repathRate = 0.5f;
@@ -47,6 +45,7 @@ namespace Entity {
             nextWaypointDistance = 2;
             speed = 2;
         }
+
         /// <summary>
         /// Path callback once the path has completed calculating
         /// </summary>
@@ -121,7 +120,7 @@ namespace Entity {
                     //Move / Rotate Controller
                     Vector3 dir = (path.vectorPath[currentWaypoint] - transform.position).normalized;
                     //Set the speed factor to slow down when we are closer to reaching the next point
-                    _npcController.speedFactor = reachedEndofPath ? Mathf.Sqrt(distanceToWaypoint / nextWaypointDistance) : 1f;
+                    characterController.speedFactor = reachedEndofPath ? Mathf.Sqrt(distanceToWaypoint / nextWaypointDistance) : 1f;
                     MoveTo(new Vector2(dir.x, dir.z)); //Convert input movement to vector2
                 }
             }
@@ -139,14 +138,14 @@ namespace Entity {
         /// </summary>
         /// <param name="direction"></param>
         public void RotateToTarget(Vector2 direction) {
-            _npcController.CharacterRotation(direction);
+            characterController.CharacterRotation(direction);
         }
         /// <summary>
         /// Move towards a target
         /// </summary>
         /// <param name="direction"></param>
         public void MoveToTarget(Vector2 direction) {
-            _npcController.CharacterMovement(direction);
+            characterController.CharacterMovement(direction);
         }
     }
 }

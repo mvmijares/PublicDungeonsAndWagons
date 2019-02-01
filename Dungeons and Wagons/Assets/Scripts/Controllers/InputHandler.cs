@@ -4,6 +4,7 @@ using UnityEngine;
 
 //handles setting up input for game
 public class KeyboardAction : PlayerActionSet {
+    public PlayerAction Run;
     public PlayerAction Quit;
     public PlayerAction Action1;
     public PlayerAction Inventory;
@@ -17,9 +18,11 @@ public class KeyboardAction : PlayerActionSet {
     public PlayerAction MouseZoomUp;
     public PlayerAction MouseZoomDown;
     public PlayerOneAxisAction MouseZoom;
+
     
     //Run. Inventory
     public KeyboardAction() {
+        Run = CreatePlayerAction("Run");
         Quit = CreatePlayerAction("Quit");
         Action1 = CreatePlayerAction("Action1");
         Inventory = CreatePlayerAction("Inventory");
@@ -39,6 +42,7 @@ public class KeyboardAction : PlayerActionSet {
     public static KeyboardAction CreateDefaultBindings() {
         KeyboardAction keyboardActions = new KeyboardAction();
 
+        keyboardActions.Run.AddDefaultBinding(Key.Shift);
         keyboardActions.Quit.AddDefaultBinding(Key.Escape);
         keyboardActions.Action1.AddDefaultBinding(Key.Space);
         keyboardActions.Inventory.AddDefaultBinding(Key.I);
@@ -56,13 +60,13 @@ public class KeyboardAction : PlayerActionSet {
         keyboardActions.ListenOptions.UnsetDuplicateBindingsOnSet = true;
         keyboardActions.ListenOptions.IncludeUnknownControllers = true;
 
-        //keyboardActions.ListenOptions.OnBindingFound = (action, binding) => {
-        //    if(binding == new KeyBindingSource(Key.Escape)) {
-        //        action.StopListeningForBinding();
-        //        return false;
-        //    }
-        //    return true;
-        //};
+        keyboardActions.ListenOptions.OnBindingFound = (action, binding) => {
+            if (binding == new KeyBindingSource(Key.Escape)) {
+                action.StopListeningForBinding();
+                return false;
+            }
+            return true;
+        };
 
         return keyboardActions;
     }
@@ -75,13 +79,17 @@ public class InputHandler : MonoBehaviour {
     [SerializeField]
     GameManager _gameManager;
 
+    public event Action<bool> OnRunningKeyPressedEvent;
     public event Action<bool> OnActionKeyPressedEvent;
-    public event Action<bool> OnInventoryKeyPressedEvent;
+    public event Action OnInventoryKeyPressedEvent;
+    public event Action OnEscapeKeyPressedEvent;
     public event Action<bool> OnMouseRightClickEvent;
     public event Action<bool> OnMouseLeftClickEvent;
-    public event Action<bool> OnEscapeKeyPressedEvent;
+
     public event Action<Vector2> OnMovementEvent;
     public event Action<float> OnMouseScrollWheelEvent;
+
+    private bool inventoryLock = false;
     #endregion
     public void InitializeInputHandler(GameManager gameManager) {
         _gameManager = gameManager;
@@ -94,19 +102,20 @@ public class InputHandler : MonoBehaviour {
         KeyboardControls();
     }
     void KeyboardControls() {
+        if (_input.Run.IsPressed) {
+            if (OnRunningKeyPressedEvent != null)
+                OnRunningKeyPressedEvent(true);
+        } else {
+            if (OnRunningKeyPressedEvent != null)
+                OnRunningKeyPressedEvent(false);
+        }
         if (_input.Quit.WasReleased) {
             if (OnEscapeKeyPressedEvent != null)
-                OnEscapeKeyPressedEvent(true);
-        } else {
-            if (OnEscapeKeyPressedEvent != null)
-                OnEscapeKeyPressedEvent(false);
+                OnEscapeKeyPressedEvent();
         }
         if (_input.Inventory.WasReleased) {
             if (OnInventoryKeyPressedEvent != null)
-                OnInventoryKeyPressedEvent(true);
-        } else {
-            if (OnInventoryKeyPressedEvent != null)
-                OnInventoryKeyPressedEvent(false);
+                OnInventoryKeyPressedEvent();
         }
         if (_input.Action1.WasPressed) {
             if (OnActionKeyPressedEvent != null)
@@ -130,10 +139,10 @@ public class InputHandler : MonoBehaviour {
             if (OnMouseLeftClickEvent != null)
                 OnMouseLeftClickEvent(false);
         }
-
-        if (OnMouseScrollWheelEvent != null) {
+        if (OnMouseScrollWheelEvent != null) 
             OnMouseScrollWheelEvent(_input.MouseZoom);
-        }
-
+        
+        if (OnMovementEvent != null)
+            OnMovementEvent(_input.Move);
     }
 }

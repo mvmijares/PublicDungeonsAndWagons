@@ -14,6 +14,8 @@ namespace Entity {
         protected float targetRunSpeed;
         protected float targetWalkSpeed;
 
+        public bool running;
+        public float speedFactor;
         public float walkSpeed = 2f;
         public float runSpeed = 6f;
 
@@ -24,8 +26,7 @@ namespace Entity {
         public Vector2 direction;
         protected float speedSmoothVel;
         protected float currentSpeed;
-        protected bool running;
-     
+  
         #endregion
         public virtual void InitializeController(GameManager gameManager, Character character) {
             _animationController = GetComponentInChildren<AnimationController>();
@@ -49,11 +50,11 @@ namespace Entity {
         /// </summary>
         /// <param name="direction">direction character will move in</param>
         public virtual void CharacterMovement(Vector2 direction) {
-            targetSpeed = ((running) ? targetRunSpeed : targetWalkSpeed) * direction.magnitude; //speed is 0 if no input happens
+            targetSpeed = ((running) ? (targetRunSpeed * speedFactor) : (targetWalkSpeed * speedFactor)) * direction.magnitude; //speed is 0 if no input happens
             currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVel, speedSmoothTime);
 
             transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
-            float animationSpeedPercent = ((running) ? 1 : .5f) * direction.magnitude;
+            float animationSpeedPercent = ((running) ? 1 : .5f) * direction.magnitude * 2f;
             
             if (_animationController) {
                 _animationController.SetLocomotion(animationSpeedPercent, speedSmoothTime);

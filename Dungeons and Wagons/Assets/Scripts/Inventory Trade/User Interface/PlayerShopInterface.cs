@@ -9,21 +9,17 @@ using UserInterfaceStates;
 
 public class PlayerShopInterface : UserInterface {
     #region Data
-    ImageLibrary _imageLibrary;
-
-    [SerializeField]
     public GameObject buttonTemplate;
     public Sprite emptySprite; // display a empty box for nothing
     public GameObject playerShopContent; // Will change this later
-    [SerializeField]
 
-    ShopButton overlapButton = null;
-    ShopButton destinationButton = null;
-    GameObject dragObjectReference = null;
+    [SerializeField] private ShopButton overlapButton = null;
+    [SerializeField] private ShopButton destinationButton = null;
+    [SerializeField] private GameObject dragObjectReference = null;
 
-    Button _inventoryTab;
-    List<Rect> shopButtonRects;
-    List<ShopButton> shopButtons;
+    [SerializeField] private Button _inventoryTab;
+    [SerializeField] private List<Rect> shopButtonRects;
+    [SerializeField] private List<ShopButton> shopButtons;
    
     bool initialized; // if this is the first time we are access shop.// Delete items at a specific slot location.
 
@@ -47,8 +43,12 @@ public class PlayerShopInterface : UserInterface {
             shopButtons.Add(button);
         }
         initialized = false;
+        RegisterEvents();
     }
 
+    private void OnDestroy() {
+        DeregisterEvents();
+    }
     public void SetInventoryTabButton(Button button) {
         _inventoryTab = button;
     }
@@ -123,14 +123,15 @@ public class PlayerShopInterface : UserInterface {
     /// </summary>
     /// <param name="itemButton"></param>
     void CheckItemDetails(ItemButton itemButton) {
-        Item newItem = _gameManager.player.inventory.GetItem(itemButton.invSlot);
+        Item newItem = _gameManager.level.player.inventory.GetItem(itemButton.invSlot);
 
         if (newItem.isStackable && newItem.itemCount > 1) {
             Item newItemCopy = newItem.GetCopy();
             _userInterfaceManager.EnableStackInterface(newItemCopy, itemButton, overlapButton.invSlot);
         } else {
             _gameManager.playerShop.AddItemToShopInventory(newItem, overlapButton.invSlot);
-            _gameManager.DeleteItemFromPlayerInventory(itemButton.invSlot);
+            //Delete item from player inventory
+            //_gameManager.DeleteItemFromPlayerInventory(itemButton.invSlot);
             DisplayNewButton(itemButton);
         }
     }

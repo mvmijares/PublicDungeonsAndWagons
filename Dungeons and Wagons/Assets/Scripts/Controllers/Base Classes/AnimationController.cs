@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Entity {
+    /// <summary>
+    /// Dictates our animations for our Human controllers
+    /// </summary>
     public class AnimationController : MonoBehaviour {
 
         #region Data
         public enum AnimationName {
-            None, Talking, Agreeing
+            None, Talking, Agreeing, Attacking
         }
         public enum AnimationState {
             None, HasStarted, IsPlaying, HasCompleted
@@ -39,23 +42,39 @@ namespace Entity {
         }
         /// <summary>
         /// Function to set the conditions for our animator.
-        /// 
         /// </summary>
         /// <param name="name"></param>
         public virtual void SetControllerAnimation(AnimationName name) {
             if (anim) {
-                if (name == AnimationName.Agreeing) {
-                    if (!anim.GetBool("Agreeing")) {
-                        anim.SetBool("Agreeing", true);
-                        state = AnimationState.HasStarted;
-                    }
+                switch (name) {
+                    case AnimationName.Agreeing: {
+                            if (!anim.GetBool("Agreeing")) {
+                                anim.SetBool("Agreeing", true);
+                                state = AnimationState.HasStarted;
+                            }
+                            break;
+                        }
+                    case AnimationName.Talking: {
+                            if (!anim.GetBool("Talking")) {
+                                anim.SetBool("Talking", true);
+                                state = AnimationState.HasStarted;
+                            }
+                            break;
+                        }
+                    case AnimationName.Attacking: {
+                            LoopAttackAnimations();
+                            break;
+                        }
                 }
-                if (name == AnimationName.Talking) {
-                    if (!anim.GetBool("Talking")) {
-                        anim.SetBool("Talking", true);
-                        state = AnimationState.HasStarted;
-                    }
-                }
+            }
+        }
+        /// <summary>
+        /// If we have multiple attack animations, we should loop through them
+        /// </summary>
+        private void LoopAttackAnimations() {
+            if (!anim.GetBool("Attacking") && state != AnimationState.HasStarted) {
+                anim.SetBool("Attacking", true);
+                state = AnimationState.HasStarted;
             }
         }
     }

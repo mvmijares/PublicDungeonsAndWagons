@@ -83,8 +83,6 @@ public class UserInterfaceManager : MonoBehaviour {
     /// </summary>
     public void InitializeInterfaces(GameManager gameManager) {
         _gameManager = gameManager;
-        _player = _gameManager.player;
-
         _inventoryInterface = FindObjectOfType<InventoryInterface>();
         _sideMenuInterface = FindObjectOfType<SideMenuInterface>();
         _playerShopInterface = FindObjectOfType<PlayerShopInterface>();
@@ -99,7 +97,6 @@ public class UserInterfaceManager : MonoBehaviour {
         }
   
         foreach (Button button in inventoryTabs) {
-    
             button.onClick.AddListener(() => SwitchInventoryScreen(button));
             if (button.name == "Shop") {
                 button.interactable = false;
@@ -121,31 +118,17 @@ public class UserInterfaceManager : MonoBehaviour {
     /// Register events for the user interface
     /// </summary>
     private void RegisterEvents() {
-        if (_gameManager.playerShop) {
-            _gameManager.playerShop.OnPlayerShopEvent += _helpInterface.OnPlayerShopEventCalled;
-            _gameManager.playerShop.OnPlayerShopEvent += _playerShopInterface.OnPlayerShopEventCalled;
-        }
-
-        if (_gameManager.player) {
-            _gameManager.player.inventory.AddItemEvent += _inventoryInterface.AddItemToInventoryInterface;
+        if (_gameManager.level.player) {
+            _gameManager.level.player.inventory.AddItemEvent += _inventoryInterface.AddItemToInventoryInterface;
         }
     }
     /// <summary>
     /// Deregister events for the user interface
     /// </summary>
     private void DeregisterEvents() {
-        if (_gameManager.playerShop) {
-            _gameManager.playerShop.OnPlayerShopEvent -= _helpInterface.OnPlayerShopEventCalled;
-            _gameManager.playerShop.OnPlayerShopEvent -= _playerShopInterface.OnPlayerShopEventCalled;
+        foreach(UserInterface u in userInterfaces) {
+            u.DeregisterEvents();
         }
-
-        if (_gameManager.player) {
-            _gameManager.player.inventory.AddItemEvent -= _inventoryInterface.AddItemToInventoryInterface;
-        }
-    }
-    public void AccessLootInterface(Loot inventory) {
-        lootInterface.GenerateLootInterface(inventory);
-        lootInterface.UpdateinterfaceSlots();
     }
     public void AccessShopWindowInterface() {
         _playerShopInterface.GenerateShopScreen();
@@ -226,10 +209,11 @@ public class UserInterfaceManager : MonoBehaviour {
     public void CalculateNewItemCount(int value) {
         if (value > 0) {
             if (itemReference.item.itemCount - value == 0) {
-                _gameManager.DeleteItemFromPlayerInventory(itemReference.itemButton.invSlot);
+                //TODO: Delete Item from player Inventory after item.value is 0
+                //_gameManager.DeleteItemFromPlayerInventory(itemReference.itemButton.invSlot);
             }
             itemReference.item.itemCount = value;
-            _gameManager.playerShop.AddItemToShopInventory(itemReference.item, itemReference.slotNum);
+            ((TownLevel)_gameManager.level).playerShop.AddItemToShopInventory(itemReference.item, itemReference.slotNum);
             _playerShopInterface.DisplayNewButton(itemReference.itemButton);
 
             stackInterface.DisplayStackWindow(false);

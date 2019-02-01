@@ -9,16 +9,10 @@ using UnityEngine.Events;
 public class InventoryInterface : UserInterface {
 
     #region Data 
-    [SerializeField] ImageLibrary _imageLibrary;
-
     [SerializeField] private GridLayoutGroup gridGroup;
     public GameObject buttonTemplate;
 
     [SerializeField] List<ItemButton> inventoryButtons;
-    public GameObject interfaceObject;
-
-    bool _windowStatus; // is the inventory window currently open?
-    public bool windowStatus { get { return _windowStatus; } }
 
     // Delete items at a specific slot location.
     public event Action<int> DeleteItemEvent;
@@ -27,11 +21,10 @@ public class InventoryInterface : UserInterface {
 
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
-        _imageLibrary = _gameManager.imageLibrary;
         _windowStatus = false;
-        DisplayInventoryWindow(false);
         inventoryButtons = new List<ItemButton>();
-        GenerateInventoryScreen(_gameManager.player.inventory);
+        GenerateInventoryScreen(_gameManager.level.player.inventory);
+        EnableUserInterface(false);
     }
     /// <summary>
     /// Generates the inventory before loading
@@ -40,7 +33,7 @@ public class InventoryInterface : UserInterface {
     public void GenerateInventoryScreen(Inventory inventory) {
         int slot = 1;
         foreach (Item i in inventory.inventory) {
-            inventoryButtons.Add(CreateNewItemButton(_imageLibrary.GetSpriteReference(i.itemName), slot));
+            inventoryButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(i.itemName), slot));
             slot++;
         }
     }
@@ -53,7 +46,7 @@ public class InventoryInterface : UserInterface {
         int slot = 1;
         ClearInventory();
         foreach(Item i in inventory.inventory) {
-            inventoryButtons.Add(CreateNewItemButton(_imageLibrary.GetSpriteReference(i.itemName), slot));
+            inventoryButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(i.itemName), slot));
             slot++;
         }
     }
@@ -70,6 +63,10 @@ public class InventoryInterface : UserInterface {
     public bool GetWindowStatus() {
         return interfaceObject.activeSelf;
     }
+    public override void OnEscapeKeyPressed() {
+        base.OnEscapeKeyPressed();
+        EnableUserInterface(false);
+    }
     public void DisplayInventoryWindow(bool condition) {
         interfaceObject.SetActive(condition);
         _windowStatus = condition;
@@ -81,7 +78,7 @@ public class InventoryInterface : UserInterface {
     /// <param name="item"></param>
     public void AddItemToInventoryInterface(Inventory inventory, Item item) {
         int slot = inventory.currentSize + 1;
-        inventoryButtons.Add(CreateNewItemButton(_imageLibrary.GetSpriteReference(item.itemName), slot));
+        inventoryButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(item.itemName), slot));
     }
     /// <summary>
     /// Creates a new button 
@@ -117,7 +114,7 @@ public class InventoryInterface : UserInterface {
     //Event handling on individual buttons
     //Deregister after all logic is handle, then destroy button
     public void ItemDeleteWasCalled(ItemButton iButton, int slot) {
-        _gameManager.player.inventory.DeleteItemSlot(slot);
+        _gameManager.level.player.inventory.DeleteItemSlot(slot);
         inventoryButtons.Remove(iButton);
         UpdateSlots();
         iButton.ItemOnRightClickEvent -= ItemDeleteWasCalled;

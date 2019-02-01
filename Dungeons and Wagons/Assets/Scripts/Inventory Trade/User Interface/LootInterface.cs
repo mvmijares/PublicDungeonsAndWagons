@@ -13,48 +13,56 @@ using UnityEngine.Events;
 /// 
 public class LootInterface : UserInterface {
     #region Data
-    GameManager gameManager;
-    ImageLibrary imageLibrary;
-    [SerializeField]
-    bool _windowStatus; //is the loot window currently open?
-    public bool windowStatus { get { return _windowStatus; } }
-
     [SerializeField]
     List<ItemButton> itemButtons;
     public Button closeWindowButton;
     //TODO make a button template prefab that we load from 
     public GameObject buttonTemplate;
 
-    public GameObject interfaceObject;
-
     public event Action<int> TakeItemInterfaceEvent; // We take item instead of trashing it
     #endregion
 
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
-        imageLibrary = gameManager.imageLibrary;
+        _gameManager = gameManager;
         itemButtons = new List<ItemButton>();
-        closeWindowButton.onClick.AddListener(CloseWindow);
-        _windowStatus = false;
-        SetGraphics(false);
+        closeWindowButton.onClick.AddListener(OnCloseWindowButtonCalled);
+        EnableUserInterface(false);
     }
-    /// <summary>
-    /// This function just sets the graphics to invisible at start.
-    /// We can reactive it when we want to start using it
-    /// </summary>
-    public void SetGraphics(bool condition) {
-        interfaceObject.SetActive(condition);
-        _windowStatus = condition;
+    
+    public void RegisterEventForLootItem(Loot loot) {
+        loot.AccessLootInterfaceEvent += OpenLootWindow;
     }
-    public void GenerateLootInterface(Inventory inventory) {
+    
+    public void DeregisterEventForLootItem(Loot loot) {
+        loot.AccessLootInterfaceEvent -= OpenLootWindow;
+    }
+    public override void EnableUserInterface(bool condition) {
+        base.EnableUserInterface(condition);
+        if (!condition) {
+            CloseLootWindow();
+        }
+    }
+    public void OpenLootWindow(Loot loot) {
         int slot = 1;
-        if (inventory.inventory.Count > 0) {
-            foreach (Item i in inventory.inventory) {
-                itemButtons.Add(CreateNewItemButton(imageLibrary.GetSpriteReference(i.itemName), slot));
+        if (loot.inventory.Count > 0) {
+            foreach (Item i in loot.inventory) {
+                itemButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(i.itemName), slot));
                 slot++;
             }
         }
-        SetGraphics(true);
+        EnableUserInterface(true);
+    }
+    void OnCloseWindowButtonCalled() {
+        EnableUserInterface(false);
+    }
+ 
+    void CloseLootWindow() {
+        foreach (ItemButton iButton in itemButtons) {
+            iButton.ItemOnRightClickEvent -= ItemRightClickEvent;
+            Destroy(iButton.gameObject);
+        }
+        itemButtons.Clear();
     }
     /// <summary>
     /// Creates a new button 
@@ -71,27 +79,12 @@ public class LootInterface : UserInterface {
 
         return newButton.GetComponent<ItemButton>();
     }
-    /// <summary>
-    /// This function is called when we want to close the current window
-    /// </summary>
-    void CloseWindow() {
-        if (_windowStatus) {
-            foreach (ItemButton iButton in itemButtons) {
-                iButton.ItemOnRightClickEvent -= ItemRightClickEvent;
-                Destroy(iButton.gameObject);
-            }
-            itemButtons.Clear();
-            _windowStatus = false;
-            SetGraphics(false);
-            gameManager.DoneAccessingLoot();
-        }
-    }
-
     public void ItemRightClickEvent(ItemButton iButton, int slot) {
         itemButtons.Remove(iButton);
         Destroy(iButton.gameObject);
         iButton.ItemOnRightClickEvent -= ItemRightClickEvent;
-        gameManager.AddItemFromLootInterface(slot);
+        //Add Item from Loot to Player
+        //gameManager.AddItemFromLootInterface(slot);
     }
 
     public void UpdateinterfaceSlots() {

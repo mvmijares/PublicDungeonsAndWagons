@@ -40,8 +40,8 @@ namespace Entity {
 
             _health = 100;
         }
-        public virtual void RegisterEvents() { }
-        public virtual void DeregisterEvents() { }
+        public virtual void OnDestroyCharacter(){ }
+
         public Transform GetHeadPosition() {
             if (headPoint != null)
                 return headPoint;
@@ -55,7 +55,7 @@ namespace Entity {
             else
                 return null;
         }
-        public virtual void Update() {
+        public virtual void UpdateCharacter() {
             if (OnHealthEvent != null)
                 OnHealthEvent(this);
         }

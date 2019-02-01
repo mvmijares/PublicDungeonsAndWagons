@@ -9,9 +9,9 @@ public class PlayerInput : MonoBehaviour {
     [SerializeField] private GameManager _gameManager;
     [SerializeField] private Player _player;
     [SerializeField] private bool _lockCursor;
-
+    public bool lockCursor { get { return _lockCursor; } }
     [SerializeField] private bool escapeKey;
-    [SerializeField] private bool inventoryKey;
+    [SerializeField] private bool runKey;
     [SerializeField] private bool actionKey;
     [SerializeField] private bool mouseRightClick;
     [SerializeField] private bool mouseLeftClick;
@@ -21,8 +21,9 @@ public class PlayerInput : MonoBehaviour {
     public float zoomSensitivity = 1;
     public float mouseSensitivity = 10;
 
-    public bool lockCursor { get { return _lockCursor; } }
     private bool openInventory;
+    public bool inventoryStatus { get { return openInventory; } }
+
     [Tooltip("Used to determine how far from an item the player can be before opening up loot menu.")]
     public float distFromItem;
 
@@ -36,14 +37,25 @@ public class PlayerInput : MonoBehaviour {
     #endregion
 
     #region Input Events
-    public void OnEscapeKeyPressed(bool condition) { escapeKey = condition; }
-    public void OnInventoryKeyPressed(bool condition) { inventoryKey = condition; }
+    
+    public void OnRunningKeyPressed(bool condition) { runKey = condition; }
     public void OnActionKeyPressed(bool condition) { actionKey = condition; }
-    public void OnMovementPresed(Vector2 movement) { this.movement = movement; }
+    public void OnMovementPressed(Vector2 movement) { this.movement = movement; }
     public void OnMouseRightClickPressed(bool condition) { mouseRightClick = condition; }
     public void OnMouseLeftClickPressed(bool condition) { mouseLeftClick = condition; }
     public void OnMouseScrollWheel(float value) { mouseScrollWheel = value; }
 
+    public void OnEscapeKeyPressed() {
+        openInventory = !openInventory;
+        _player.accessingInterface = openInventory;
+        _gameManager.AccessInventoryInterface(openInventory);
+    }
+
+    public void OnInventoryKeyPressed() {
+        openInventory = !openInventory;
+        _player.accessingInterface = openInventory;
+        _gameManager.AccessInventoryInterface(openInventory);
+    }
     #endregion
 
     public void InitializePlayerInput(GameManager gameManager, Player player) {
@@ -54,17 +66,10 @@ public class PlayerInput : MonoBehaviour {
     }
 
     public void UpdatePlayerInput() {
-        KeyboardAction keyboardInput = _gameManager.inputHandler.input;
-        if (mouseRightClick) {
-            //We are allowed to orbit mouse
+        if (mouseRightClick) 
             _lockCursor = false;
-        } else {
+        else 
             _lockCursor = true;
-        }
-        if (inventoryKey) {
-            openInventory = !openInventory;
-            _gameManager.AccessInventoryInterface(openInventory);
-        } 
 
         if (!lockCursor) {
             if (mouseLeftClick) {
@@ -72,9 +77,19 @@ public class PlayerInput : MonoBehaviour {
             }
         }
 
-        if(_player.clickObject == null)
-            if(mouseLeftClick)
-                CheckForObject();
+        if (mouseLeftClick)
+            CheckForObject();
+
+        if(movement != Vector2.zero && _player.selectedEnemy != null) {
+            _player.playerPathfinder.SetTarget(null);
+            _player.isAttacking = false;
+        }
+        if (_player.isAttacking) {
+            _player.playerAnimationController.SetControllerAnimation(AnimationController.AnimationName.Attacking);
+        }
+        
+        _player.playerController.moveDirection = movement;
+        _player.playerController.running = runKey;
     }
 
     void CheckForObject() {
@@ -91,10 +106,12 @@ public class PlayerInput : MonoBehaviour {
                     }
                 case "NPC": {
                         CheckNPCObject(hit.transform);
+                        found = true;
                         break;
                     }
                 case "Enemy": {
                         CheckEnemyObject(hit.transform);
+                        found = true;
                         break;
                     }
             }
@@ -114,6 +131,8 @@ public class PlayerInput : MonoBehaviour {
     void CheckEnemyObject(Transform reference) {
         if (reference.GetComponent<Enemy>()) {
             _player.clickObject = reference;
+            _player.selectedEnemy = reference.GetComponent<Enemy>();
+            _player.playerPathfinder.SetTarget(reference);
         }
     }
     /// <summary>
@@ -125,8 +144,7 @@ public class PlayerInput : MonoBehaviour {
             float distance = (_player.transform.position - reference.position).magnitude;
             if (distance < distFromItem) {
                 _player.clickObject = reference;
-                reference.gameObject.GetComponent<Loot>().AccessLootMenu();
-                
+                reference.gameObject.GetComponent<Loot>().AccessLoot();
             }
         }
     }

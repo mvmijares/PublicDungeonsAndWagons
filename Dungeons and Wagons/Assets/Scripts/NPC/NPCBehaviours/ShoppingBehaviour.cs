@@ -28,6 +28,8 @@ public class ShoppingBehaviour : NPCBehaviour {
     bool isEmotionDone = false;
     bool isBuying = false;
     bool isThinking = false;
+
+    private PlayerShop playerShop = null;
     #endregion
 
     public override void InitializeBehaviour(GameManager gameManager, NPC npc) {
@@ -39,6 +41,8 @@ public class ShoppingBehaviour : NPCBehaviour {
         if (decisionList.Count < 1) {
             decisionList = new List<ShoppingDecision>();
         }
+
+        playerShop = ((TownLevel)_gameManager.level).playerShop;
     }
     public override void PlayBehaviour() {
         base.PlayBehaviour();
@@ -70,7 +74,7 @@ public class ShoppingBehaviour : NPCBehaviour {
                 }
             case ShoppingDecision.Shop: {
                     if (shopItems == null)
-                        shopItems = _gameManager.playerShop.shopItems;
+                        shopItems = playerShop.shopItems;
 
                     if (_npcPathfinder._target == null && !reachedEndofPath)
                         _npcPathfinder.SetTarget(shopItems[shopIndex].viewPoint);
@@ -91,7 +95,7 @@ public class ShoppingBehaviour : NPCBehaviour {
                     break;
                 }
             case ShoppingDecision.Talk: {
-                    Vector3 direction = _gameManager.player.transform.position - transform.position;
+                    Vector3 direction = _gameManager.level.player.transform.position - transform.position;
                     Vector2 lookDirection = new Vector2(direction.x, direction.z);
                     _npcPathfinder.RotateToTarget(lookDirection);
 
