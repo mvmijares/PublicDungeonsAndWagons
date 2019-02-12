@@ -20,7 +20,7 @@ namespace Entity {
         private Animator anim;
 
         public AnimationState state;
-
+        public bool animState; 
         #endregion
 
         /// <summary>
@@ -31,6 +31,7 @@ namespace Entity {
             _gameManager = gameManager;
             anim = GetComponentInChildren<Animator>();
             state = AnimationState.None;
+            animState = true;
         }
         /// <summary>
         /// Set the values for our blend tree for locomotion
@@ -47,6 +48,12 @@ namespace Entity {
         public virtual void SetControllerAnimation(AnimationName name) {
             if (anim) {
                 switch (name) {
+                    case AnimationName.None: {
+                            anim.SetBool("Attacking", false);
+                            anim.SetBool("Agreeing", false);
+                            anim.SetBool("Talking", false);
+                            break;
+                        }
                     case AnimationName.Agreeing: {
                             if (!anim.GetBool("Agreeing")) {
                                 anim.SetBool("Agreeing", true);
@@ -67,6 +74,17 @@ namespace Entity {
                         }
                 }
             }
+        }
+        public void StopAnimator() {
+            anim.enabled = false;
+            animState = false;
+            anim.SetBool("Attacking", false);
+            anim.SetBool("Agreeing", false);
+            anim.SetBool("Talking", false);
+        }
+        public void ResumeAnimator() {
+            anim.enabled = true;
+            animState = true;
         }
         /// <summary>
         /// If we have multiple attack animations, we should loop through them

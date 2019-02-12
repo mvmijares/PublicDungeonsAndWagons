@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class UserInterface : MonoBehaviour {
     #region Data
-    protected Canvas _canvas;
+    protected Canvas _canvas; // TODO : Need to change this
     protected GameManager _gameManager;
     protected UserInterfaceManager _userInterfaceManager;
     public GameObject interfaceObject;
@@ -18,7 +18,7 @@ public class UserInterface : MonoBehaviour {
     public virtual void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         _gameManager = gameManager;
         _userInterfaceManager = userInterfaceManager;
-        _canvas = GetComponent<Canvas>();
+        _canvas = GetComponent<Canvas>(); 
         RegisterEvents();
     }
     public virtual void OnDestroyUserInterface() {
@@ -32,6 +32,7 @@ public class UserInterface : MonoBehaviour {
         _gameManager.inputHandler.OnEscapeKeyPressedEvent -= OnEscapeKeyPressed;
     }
     public virtual void OnEscapeKeyPressed() { }
+    public virtual void AccessInterface() { }
     public virtual void EnableUserInterface(bool condition) {
         if (interfaceObject) {
             interfaceObject.SetActive(condition);

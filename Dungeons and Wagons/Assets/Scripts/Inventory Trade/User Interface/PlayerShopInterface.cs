@@ -22,7 +22,7 @@ public class PlayerShopInterface : UserInterface {
     [SerializeField] private List<ShopButton> shopButtons;
    
     bool initialized; // if this is the first time we are access shop.// Delete items at a specific slot location.
-
+    private bool shopInteractable;
     public event Action<int> DeleteItemEvent;
 
     /// <summary>
@@ -45,37 +45,29 @@ public class PlayerShopInterface : UserInterface {
         initialized = false;
         RegisterEvents();
     }
-
+    public override void AccessInterface() {
+        base.AccessInterface();
+        int slot = 0;
+        foreach (ShopButton button in shopButtons) {
+            button.InitializeButton(_userInterfaceManager, this);
+            button.SetBackgroundSprite(emptySprite);
+            button.SetInventorySlot(slot);
+            slot++;
+        }
+        initialized = true;
+    }
     private void OnDestroy() {
         DeregisterEvents();
     }
-    public void SetInventoryTabButton(Button button) {
-        _inventoryTab = button;
-    }
+
     private void Update() {
         if (_userInterfaceManager.state == InventoryState.Shop)
             CheckForDragItem();
     }
-
-    public void GenerateShopScreen() {
-        int slot = 0;
-
-        if (initialized) {
-          
-        } else {
-            foreach (ShopButton button in shopButtons) {
-                button.InitializeButton(_userInterfaceManager, this);
-                button.SetBackgroundSprite(emptySprite);
-                button.SetInventorySlot(slot);
-                slot++;
-            }
-            initialized = true;
-        }
-    }
-
     public void OnPlayerShopEventCalled(PlayerShopData data) {
-        _inventoryTab.interactable = data._playerWithinBox;
+        shopInteractable = data._playerWithinBox;
     }
+
     /// <summary>
     /// Creates a new button 
     /// </summary>

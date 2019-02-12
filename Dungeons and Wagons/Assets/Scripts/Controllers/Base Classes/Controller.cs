@@ -23,7 +23,6 @@ namespace Entity {
         protected float turnSmoothVel;
 
         public float speedSmoothTime = 0.1f;
-        public Vector2 direction;
         protected float speedSmoothVel;
         protected float currentSpeed;
   

@@ -14,7 +14,6 @@ public class EnemyUserInterface : UserInterface {
 
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
-        
     }
 
 

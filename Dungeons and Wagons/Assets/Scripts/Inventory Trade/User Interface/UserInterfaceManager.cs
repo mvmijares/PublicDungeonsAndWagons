@@ -21,27 +21,36 @@ public class UserInterfaceManager : MonoBehaviour {
     private Entity.Player _player;
     private Inventory _wagon;
 
-    [SerializeField]
-    private LootInterface _lootInterface;
+    [SerializeField] private LootInterface _lootInterface;
     public LootInterface lootInterface { get { return _lootInterface; } }
 
-    private InventoryInterface _inventoryInterface;
+    [SerializeField] private InventoryInterface _inventoryInterface;
     public InventoryInterface inventoryInterface { get { return _inventoryInterface; } }
-    [SerializeField]
-    private PlayerShopInterface _playerShopInterface;
+
+    [SerializeField] private PlayerShopInterface _playerShopInterface;
     public PlayerShopInterface playerShopInterface { get { return _playerShopInterface; } }
 
-    private HelpInterface _helpInterface;
+    [SerializeField] private HelpInterface _helpInterface;
     public HelpInterface helpInterface { get { return _helpInterface; } }
 
-    private StackInterface _stackInterface;
+    [SerializeField] private StackInterface _stackInterface;
     public StackInterface stackInterface { get { return _stackInterface; } }
 
-    private SideMenuInterface _sideMenuInterface;
+    [SerializeField] private SideMenuInterface _sideMenuInterface;
     public SideMenuInterface sideMenuInterface { get { return _sideMenuInterface; } }
 
-    [SerializeField]
-    private List<Button> inventoryTabs;
+    [SerializeField] private HealthBarInterface _healthBarInterface;
+    public HealthBarInterface healthBarInterface { get { return _healthBarInterface; } }
+
+    public Transform inventoryPageButtons;
+    [SerializeField] private Transform bagPage;
+    [SerializeField] private Transform wagonPage;
+    [SerializeField] private Transform shopPage;
+    [SerializeField] private Transform mapPage;
+    [SerializeField] private Transform systemPage;
+
+
+    public UserInterface currentInterface; // current interface we are using
 
     private bool _canDisplaySpeechBubble;
     public bool canDisplaySpeechBubble; //boolean to control displaying the speech bubble.
@@ -83,80 +92,137 @@ public class UserInterfaceManager : MonoBehaviour {
     /// </summary>
     public void InitializeInterfaces(GameManager gameManager) {
         _gameManager = gameManager;
+
         _inventoryInterface = FindObjectOfType<InventoryInterface>();
         _sideMenuInterface = FindObjectOfType<SideMenuInterface>();
         _playerShopInterface = FindObjectOfType<PlayerShopInterface>();
         _lootInterface = FindObjectOfType<LootInterface>();
         _helpInterface = FindObjectOfType<HelpInterface>();
         _stackInterface = FindObjectOfType<StackInterface>();
+        _healthBarInterface = FindObjectOfType<HealthBarInterface>();
 
+        //TODO: Redudant, will have to change initialization
         userInterfaces = FindObjectsOfType<UserInterface>();
 
         foreach (UserInterface userInterface in userInterfaces) {
             userInterface.InitializeUserInterface(_gameManager, this);
         }
-  
-        foreach (Button button in inventoryTabs) {
-            button.onClick.AddListener(() => SwitchInventoryScreen(button));
-            if (button.name == "Shop") {
-                button.interactable = false;
-                playerShopInterface.SetInventoryTabButton(button);
+        if (inventoryPageButtons) {
+            Transform[] children = inventoryPageButtons.GetComponentsInChildren<Transform>();
+
+            foreach (Transform c in children) {
+                if (c.gameObject.layer == LayerMask.NameToLayer("UI")) {
+                    switch (c.tag) {
+                        case "Bag": {
+                                bagPage = c;
+                                bagPage.GetComponent<InventoryPage>().InitializeInventoryPage(this);
+                                break;
+                            }
+                        case "Wagon": {
+                                wagonPage = c;
+                                wagonPage.GetComponent<InventoryPage>().InitializeInventoryPage(this);
+                                break;
+                            }
+                        case "Shop": {
+                                shopPage = c;
+                                shopPage.GetComponent<InventoryPage>().InitializeInventoryPage(this);
+                                break;
+                            }
+                        case "Map": {
+                                mapPage = c;
+                                mapPage.GetComponent<InventoryPage>().InitializeInventoryPage(this);
+                                break;
+                            }
+                        case "System": {
+                                systemPage = c;
+                                systemPage.GetComponent<InventoryPage>().InitializeInventoryPage(this);
+                                break;
+                            }
+                    }
+                }
             }
         }
-
         _state = InventoryState.None;
+
         canDrag = true;
+
         itemReference = new ItemReference();
+
         RegisterEvents();
-
-
     }
     private void OnDestroy() {
         DeregisterEvents(); // Remember to call this for event destruction
+    }
+    
+    private void Update() {
+        if (_state == InventoryState.None)
+            canDisplaySpeechBubble = true;
+        else
+            canDisplaySpeechBubble = false;
     }
     /// <summary>
     /// Register events for the user interface
     /// </summary>
     private void RegisterEvents() {
         if (_gameManager.level.player) {
+            _gameManager.level.player.playerInput.OnAccessInventoryEvent += _inventoryInterface.EnableUserInterface;
+            _gameManager.level.player.playerInput.OnAccessInventoryEvent += OnAccessInventoryEventCalled;
             _gameManager.level.player.inventory.AddItemEvent += _inventoryInterface.AddItemToInventoryInterface;
         }
     }
+
     /// <summary>
     /// Deregister events for the user interface
     /// </summary>
     private void DeregisterEvents() {
-        foreach(UserInterface u in userInterfaces) {
+        if (_gameManager.level.player) {
+            _gameManager.level.player.playerInput.OnAccessInventoryEvent -= _inventoryInterface.EnableUserInterface;
+            _gameManager.level.player.playerInput.OnAccessInventoryEvent -= OnAccessInventoryEventCalled;
+        }
+        foreach (UserInterface u in userInterfaces) {
             u.DeregisterEvents();
         }
     }
-    public void AccessShopWindowInterface() {
-        _playerShopInterface.GenerateShopScreen();
-        _sideMenuInterface.DisplaySideMenuWindow(true);
-        _state = InventoryState.Shop;
-        canDisplaySpeechBubble = false;
+    public void OnAccessInventoryEventCalled(bool condition) {
+        if (condition)
+            currentInterface = _inventoryInterface; // default interface to be called
+        else
+            currentInterface = null; 
     }
-    public void SwitchInventoryScreen(InventoryState state) {
-        _state = state;
+    /// <summary>
+    /// Function to handle logic for switching inventory menus
+    /// </summary>
+    /// <param name="page"></param>
+    public void OnSwitchPage(InventoryPageState page) {
+
+        SwitchInventoryScreen(page);
     }
-    void SwitchInventoryScreen(Button button) {
-        string buttonName = button.gameObject.name;
-        switch (buttonName) {
-            case "Player Inventory": {
+    /// <summary>
+    /// Function to handle switching user interface states in the inventory
+    /// </summary>
+    /// <param name="page"></param>
+    void SwitchInventoryScreen(InventoryPageState page) {
+        switch (page) {
+            case InventoryPageState.Bag: {
+                    currentInterface = _inventoryInterface;
                     _state = InventoryState.Inventory;
                     break;
                 }
-            case "Shop": {
+            case InventoryPageState.Shop: {
+                    currentInterface = _playerShopInterface;
                     _state = InventoryState.Shop;
-                    AccessShopWindowInterface();
                     break;
                 }
-            case "Map": {
+            case InventoryPageState.Map: {
                     _state = InventoryState.Map;
                     break;
                 }
-            case "Wagon": {
+            case InventoryPageState.Wagon: {
                     _state = InventoryState.Wagon;
+                    break;
+                }
+            case InventoryPageState.System: {
+                    _state = InventoryState.System;
                     break;
                 }
             default: {
@@ -164,7 +230,11 @@ public class UserInterfaceManager : MonoBehaviour {
                     break;
                 }
         }
-        Debug.Log("Inventory is in " + _state.ToString() + " state.");
+        inventoryInterface.SwitchPage(page);
+        currentInterface.AccessInterface();
+
+        if(_state == InventoryState.Shop)
+            _sideMenuInterface.DisplaySideMenuWindow(true);
     }
     /// <summary>
     /// Sets the drag object for inventory
@@ -222,6 +292,10 @@ public class UserInterfaceManager : MonoBehaviour {
             itemReference.Clear();
         }
     }
+    /// <summary>
+    /// Move logic to displaying inventory window to inventory user interface
+    /// </summary>
+    /// <param name="condition"></param>
     public void DisplayInventoryWindow(bool condition) {
         if (condition) {
             inventoryInterface.DisplayInventoryWindow(condition);
@@ -238,6 +312,7 @@ public class UserInterfaceManager : MonoBehaviour {
             ResetInventoryVariables();
         }
     }
+
     void ResetInventoryVariables() {
         canDrag = true;
         calculateItemCount = false;

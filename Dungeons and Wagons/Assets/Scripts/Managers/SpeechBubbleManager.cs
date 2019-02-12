@@ -23,7 +23,7 @@ public class SpeechBubbleManager : MonoBehaviour {
 
     public void InitializeSpeechBubbleManager(GameManager gameManager) {
         _gameManager = gameManager;
-        _userInterfaceManager = gameManager.userInterfaceManager;
+        _userInterfaceManager = gameManager.level.userInterfaceManager;
 
         emotionLibrary = gameManager.imageLibrary.GetEmotionLibrary();
         if(emotionLibrary == null) {

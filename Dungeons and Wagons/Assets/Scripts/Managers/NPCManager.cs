@@ -80,12 +80,4 @@ public class NPCManager : MonoBehaviour {
     public void CreateNPCsForTrade() {
         SpawnNewNPC(NPCSpawnLocation.position, AIState.Shop);
     }
-
-    public void UpdateNPCList() {
-        if(NPCList.Count > 0) {
-            foreach(NPC n in NPCList) {
-                n.UpdateCharacter();
-            }
-        }
-    }
 }

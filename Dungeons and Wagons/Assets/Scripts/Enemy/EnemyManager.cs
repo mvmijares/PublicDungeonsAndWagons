@@ -17,12 +17,17 @@ public class EnemyManager : MonoBehaviour {
         Enemy[] enemies = FindObjectsOfType<Enemy>();
         if(enemies != null) {
             foreach (Enemy e in enemies) {
+                HealthBarInterface healthbar = gameManager.healthBarManager.CreateNewHealthBar(e);
+                if (healthbar) {
+                    e.OnHealthEvent += healthbar.OnHealthEventCalled;
+                    e.OnDeathEvent += healthbar.OnDeathEventCalled;
+                }
                 enemyList.Add(e);
                 e.InitializeCharacter(gameManager);
             }
         }
     }
-
+    
     //Add enemy to our list
     public void AddEnemyToList(Enemy e) {
         if(e != null) {

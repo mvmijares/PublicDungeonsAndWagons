@@ -5,15 +5,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
+using UserInterfaceStates;
 
 public class InventoryInterface : UserInterface {
 
     #region Data 
     [SerializeField] private GridLayoutGroup gridGroup;
     public GameObject buttonTemplate;
-
+    [SerializeField] private GameObject inventoryContent = null; //Where items in the inventory will be placed
     [SerializeField] List<ItemButton> inventoryButtons;
 
+    [SerializeField] List<Transform> inventoryPages;
+    [SerializeField] int lastPageIndex = 0;
     // Delete items at a specific slot location.
     public event Action<int> DeleteItemEvent;
 
@@ -21,6 +24,25 @@ public class InventoryInterface : UserInterface {
 
     public override void InitializeUserInterface(GameManager gameManager, UserInterfaceManager userInterfaceManager) {
         base.InitializeUserInterface(gameManager, userInterfaceManager);
+
+        inventoryPages = new List<Transform>();
+        Transform[] children = interfaceObject.GetComponentsInChildren<Transform>();
+        foreach(Transform t in children) {
+            if(t.name == "Inventory Content") {
+                inventoryContent = t.gameObject;
+            }
+            if (t.tag == "Page") {
+                inventoryPages.Add(t);
+                if (t.GetSiblingIndex() > lastPageIndex)
+                    lastPageIndex = t.GetSiblingIndex();
+            }
+        }
+        if (inventoryContent == null)
+            Debug.Log("There is no scroll view in inventory interface");
+
+
+
+
         _windowStatus = false;
         inventoryButtons = new List<ItemButton>();
         GenerateInventoryScreen(_gameManager.level.player.inventory);
@@ -37,7 +59,13 @@ public class InventoryInterface : UserInterface {
             slot++;
         }
     }
-
+    public void SwitchPage(InventoryPageState state) {
+        foreach(Transform t in inventoryPages) {
+            if(t.name == state + " Page") {
+                t.SetSiblingIndex(lastPageIndex);
+            }
+        }
+    }
     /// <summary>
     /// Called whenever we want to update the inventory.
     /// </summary>
@@ -71,6 +99,7 @@ public class InventoryInterface : UserInterface {
         interfaceObject.SetActive(condition);
         _windowStatus = condition;
     }
+
     /// <summary>
     /// Add buttons, that reference inventory items,to the user interface.
     /// </summary>
@@ -94,7 +123,7 @@ public class InventoryInterface : UserInterface {
         newButton.SetInventorySlot(slot);
         newButton.ItemOnRightClickEvent += ItemDeleteWasCalled;
 
-        newButton.transform.SetParent(buttonTemplate.transform.parent, false);
+        newButton.transform.SetParent(inventoryContent.transform, false);
 
         return newButton;
     }

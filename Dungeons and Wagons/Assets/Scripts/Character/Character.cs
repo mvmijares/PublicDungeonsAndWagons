@@ -9,28 +9,27 @@ using UnityEngine.Events;
 namespace Entity {
     public class Character : MonoBehaviour {
         #region Data
+        //Prototype stats
+        protected int STR;
+        protected int DEF;
+        protected int SPD;
+        protected int ACC;
+
         protected GameManager _gameManager;
         public string _name;
 
-        [SerializeField]
-        protected int _health;
+        [SerializeField] protected int _health;
+        public int health { get { return _health; } }
+        public int maxHealth;
         public Inventory inventory;
         [SerializeField]
         protected Transform headPoint; // used for calculating UI stuff
         [SerializeField]
         protected Transform bodyPoint;
+        protected bool initialized = false;
 
-        public int health {
-            get { return _health; }
-            set {
-                _health = value;
-                if (_health < 0)
-                    _health = 0;
-            }
-        }
-
-        public event Action<Character> OnHealthEvent;
-
+        public event Action<int> OnHealthEvent;
+        public event Action OnDeathEvent;
         #endregion
         public virtual void InitializeCharacter(GameManager gameManager) {
             _gameManager = gameManager;
@@ -39,6 +38,9 @@ namespace Entity {
                 inventory.InitializeInventory(gameManager, this);
 
             _health = 100;
+            maxHealth = 100;
+
+            initialized = true;
         }
         public virtual void OnDestroyCharacter(){ }
 
@@ -48,6 +50,7 @@ namespace Entity {
             else
                 return null;
         }
+        public virtual void TakeDamage(int damage) { }
 
         public Transform GetBodyPosition() {
             if (bodyPoint != null)
@@ -55,9 +58,14 @@ namespace Entity {
             else
                 return null;
         }
-        public virtual void UpdateCharacter() {
+        public virtual void Update() {
             if (OnHealthEvent != null)
-                OnHealthEvent(this);
+                OnHealthEvent(_health);
+
+            //if(_health <= 0) {
+            //    if (OnDeathEvent != null)
+            //        OnDeathEvent();
+            //}
         }
     }
 }

@@ -7,6 +7,9 @@ using UnityEngine;
 /// Primary function for this class is to only have functionality for players
 /// </summary>
 namespace Entity {
+    //Busy State is for accessing user interface
+    public enum PlayerState { None, Locomotion, Talking, Busy, Combat }
+
     public class Player : Character {
         #region Data
         [SerializeField] private PlayerController _playerController;
@@ -25,13 +28,13 @@ namespace Entity {
         public Enemy selectedEnemy = null; // Enemy that the player has selected
 
         [SerializeField] private bool _playerCamera;
-
+        public PlayerState state;
+        public PlayerState subState;
+        public Enemy currentTarget;
         [SerializeField] private bool _canMove;
         public bool canMove { get { return _canMove; } }
-
-        public bool isAttacking;
-
         public float movementSpeedFactor;
+
         public bool playerCamera {
             get {
                 if (talkingWithNPC)
@@ -64,12 +67,12 @@ namespace Entity {
         public bool talkingWithNPC;
         public bool accessingInterface;
         public bool accessingLoot;
-
+        [SerializeField] private float timeSinceLastAttack;
+        private float maxAttackSpeed = 1f;
         #endregion
 
         public override void InitializeCharacter(GameManager gameManager) {
             base.InitializeCharacter(gameManager);
-
 
             _playerInput = GetComponent<PlayerInput>();
             if (_playerInput)
@@ -87,6 +90,8 @@ namespace Entity {
             if (_playerAnimationController)
                 _playerAnimationController.InitializeAnimationController(gameManager);
 
+            state = PlayerState.Locomotion;
+            subState = PlayerState.None;
             _playerCamera = true;
             _canMove = true;
             talkingWithNPC = false;
@@ -100,7 +105,6 @@ namespace Entity {
             DeregisterEvents();
         }
         private void RegisterEvents() {
-            Debug.Log("Registering Player Events");
             _gameManager.inputHandler.OnRunningKeyPressedEvent += _playerInput.OnRunningKeyPressed;
             _gameManager.inputHandler.OnEscapeKeyPressedEvent += _playerInput.OnEscapeKeyPressed;
             _gameManager.inputHandler.OnInventoryKeyPressedEvent += _playerInput.OnInventoryKeyPressed;
@@ -121,13 +125,79 @@ namespace Entity {
             _gameManager.inputHandler.OnMovementEvent -= _playerInput.OnMovementPressed;
         }
 
-        public override void UpdateCharacter() {
-            base.UpdateCharacter();
+        public override void Update() {
+            base.Update();
             playerInput.UpdatePlayerInput();
-            if (accessingInterface)
+            if (accessingInterface) {
                 _gameManager.level.cam.lockCamera = true;
-            else
+                state = PlayerState.Busy;
+            } else {
                 _gameManager.level.cam.lockCamera = false;
+
+            }
+            if (!_playerAnimationController.animState) {
+                _playerAnimationController.ResumeAnimator();
+            }
+
+            switch (state) {
+                case PlayerState.Combat: {
+                        CharacterAttack(selectedEnemy);
+                        break;
+                    }
+                case PlayerState.Locomotion: {
+                        CharacterLocomotion();
+                        break;
+                    }
+            }
+
+            if(subState != PlayerState.None) {
+                switch (state) {
+                    case PlayerState.Combat: {
+                            _playerAnimationController.StopAnimator();
+                            timeSinceLastAttack = 0f;
+                            selectedEnemy = null;
+                            subState = PlayerState.Locomotion;
+                            break;
+                        }
+                }
+                state = subState;
+                subState = PlayerState.None;
+            }
+        }
+        private void CharacterLocomotion() {
+            _playerAnimationController.SetControllerAnimation(AnimationController.AnimationName.None);
+        }
+        private void CharacterAttack(Enemy enemy) {
+            if (enemy.health > 0 && state == PlayerState.Combat) {
+                //Distance check between enemy and player
+                float distance = (enemy.transform.position - transform.position).magnitude;
+
+                if (distance <= _gameManager.meeleCombatDistance) {
+                    _playerAnimationController.SetControllerAnimation(AnimationController.AnimationName.Attacking);
+                    timeSinceLastAttack += Time.deltaTime;
+                    if (_playerInput.movementInput) {
+                        subState = PlayerState.Locomotion;
+                        return;
+                    }
+                    if (timeSinceLastAttack >= maxAttackSpeed) {
+                        enemy.TakeDamage(CalculateCharacterDamage());
+                        timeSinceLastAttack = 0f;
+                    }
+                }
+            } else {
+                subState = PlayerState.Locomotion;
+                return;
+            }
+        }
+        /// <summary>
+        /// Function that calculates total damage before sending to enemy
+        /// </summary>
+        /// <returns></returns>
+        public int CalculateCharacterDamage() {
+            
+            int totalDamage = 10;
+
+            return totalDamage;
         }
     }
 }

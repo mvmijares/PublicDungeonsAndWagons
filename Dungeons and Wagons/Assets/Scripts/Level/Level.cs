@@ -26,19 +26,25 @@ public class Level : MonoBehaviour {
     public ThirdPersonCamera cam { get { return _cam; } }
     public LevelState _state;
     public Transform playerSpawnLocation;
-    private List<Loot> levelLootObjects;
+    protected List<Loot> levelLootObjects;
     public Loot currentLootObject;
 
-    private List<Enemy> enemyList;
+    protected List<Enemy> enemyList;
+    protected UserInterfaceManager _userInterfaceManager;
+    public UserInterfaceManager userInterfaceManager { get { return _userInterfaceManager; } }
 
     #endregion
 
     public virtual void InitializeLevel(GameManager gameManager) {
         _gameManager = gameManager;
-        _player = FindObjectOfType<Player>();
 
+        _player = FindObjectOfType<Player>();
         if (_player)
             _player.InitializeCharacter(gameManager);
+
+        _userInterfaceManager = FindObjectOfType<UserInterfaceManager>();
+        if (_userInterfaceManager)
+            _userInterfaceManager.InitializeInterfaces(gameManager);
 
         _cam = FindObjectOfType<ThirdPersonCamera>();
         if (_cam)
@@ -48,15 +54,7 @@ public class Level : MonoBehaviour {
         enemyList = new List<Enemy>();
     }
     public virtual void UpdateLevel() {
-        player.UpdateCharacter();
-
-        if(_gameManager.npcManager != null)
-            _gameManager.npcManager.UpdateNPCList();
-
-        if (enemyList.Count > 0) {
-            foreach (Enemy enemy in enemyList)
-                enemy.UpdateCharacter();
-        }
+        
     }
     public virtual void LateUpdateLevel() {
         cam.UpdatePlayerCamera();
@@ -88,13 +86,13 @@ public class Level : MonoBehaviour {
     public virtual void AddToWorldLootList(Loot loot) {
         if (!levelLootObjects.Contains(loot)) {
             levelLootObjects.Add(loot);
-            _gameManager.userInterfaceManager.lootInterface.RegisterEventForLootItem(loot);
+            _userInterfaceManager.lootInterface.RegisterEventForLootItem(loot);
         }
     }
 
     public virtual void DeleteFromWorldLootList(Loot loot) {
         if (levelLootObjects.Contains(loot)) {
-            _gameManager.userInterfaceManager.lootInterface.DeregisterEventForLootItem(loot);
+            _userInterfaceManager.lootInterface.DeregisterEventForLootItem(loot);
             levelLootObjects.Remove(loot);
         }
     }
@@ -104,7 +102,7 @@ public class Level : MonoBehaviour {
     /// <param name="item"></param>
     public void AddItemToInventory(Item item) {
         player.inventory.AddItem(item);
-        _gameManager.userInterfaceManager.lootInterface.UpdateinterfaceSlots();
+        _userInterfaceManager.lootInterface.UpdateinterfaceSlots();
     }
     /// <summary>
     /// Function for adding an item from an user interface panel

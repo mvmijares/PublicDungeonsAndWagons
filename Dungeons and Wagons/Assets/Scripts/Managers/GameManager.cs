@@ -38,9 +38,6 @@ public class GameManager : MonoBehaviour {
     public InputHandler inputHandler { get { return _inputHandler; } }
     private KeyboardAction input;
 
-    [SerializeField] private UserInterfaceManager _userInterfaceManager;
-    public UserInterfaceManager userInterfaceManager { get { return _userInterfaceManager; } }
-
     [SerializeField] private SpeechBubbleManager _speechBubbleManager;
     public SpeechBubbleManager speechBubbleManager { get { return _speechBubbleManager; } }
 
@@ -50,7 +47,11 @@ public class GameManager : MonoBehaviour {
     [SerializeField] private DialogueManager _dialogueManager;
     public DialogueManager dialogueManager { get { return _dialogueManager; } }
 
+    [SerializeField] private HealthBarManager _healthBarManager;
+    public HealthBarManager healthBarManager { get { return _healthBarManager; } }
 
+    [SerializeField] private EnemyManager _enemyManager;
+    public EnemyManager enemyManager { get { return _enemyManager; } }
 
     [SerializeField] private PlayerShop _playerShop; // reference to the shop once it is setup.
     public PlayerShop playerShop { get { return _playerShop; } }
@@ -84,13 +85,10 @@ public class GameManager : MonoBehaviour {
     //Used to determine if an object is within view of camera
     private Plane[] planes;
 
-
-    private EnemyManager _enemyManager;
-    public EnemyManager enemyManager;
-
     [SerializeField] private Entity.Character selectedObject;
     public Level level;
 
+    public float meeleCombatDistance = 1.0f;
     #endregion
     
     private void Awake() {
@@ -150,10 +148,12 @@ public class GameManager : MonoBehaviour {
     void InitializeObjects() {
         _npcManager = FindObjectOfType<NPCManager>();
         _speechBubbleManager = FindObjectOfType<SpeechBubbleManager>();
-        _userInterfaceManager = FindObjectOfType<UserInterfaceManager>();
         _dialogueManager = FindObjectOfType<DialogueManager>();
+        _healthBarManager = FindObjectOfType<HealthBarManager>();
+        _enemyManager = FindObjectOfType<EnemyManager>();
         _inputHandler = FindObjectOfType<InputHandler>();
         _inputHandler.InitializeInputHandler(this);
+
         if (_inputHandler)
             input = _inputHandler.input;
         else {
@@ -177,13 +177,21 @@ public class GameManager : MonoBehaviour {
             if (allowDebugLog)
                 Debug.Log("There is no Speech Bubble Manager within the scene!");
         }
-
+        if (_healthBarManager)
+            _healthBarManager.InitializeHealthBarManager(this);
+        else {
+            if (allowDebugLog)
+                Debug.Log("There is no Healthbar Manager within the scene!");
+        }
         if (_dialogueManager)
             _dialogueManager.InitializeDialogueManager(this);
         else {
             if (allowDebugLog)
                 Debug.Log("There is no Dialogue Manager within the scene!");
         }
+        if (_enemyManager)
+            _enemyManager.InitializeEnemyManager(this);
+
         _setupShop = false;
         _accessingLoot = false;
         _accessingPlayerInv = false;
@@ -228,23 +236,7 @@ public class GameManager : MonoBehaviour {
             _accessingNPCInv = true;
         }
     }
-    /// <summary>
-    /// Called when we want to access our inventory interface
-    /// </summary>
-    public void AccessInventoryInterface(bool condition) {
-     
-        if (condition) {
-            if (!_accessingPlayerInv && !_accessingLoot && !_accessingNPCInv) {
-                _accessingPlayerInv = condition;
-                _userInterfaceManager.SwitchInventoryScreen(InventoryState.Inventory);
-                _userInterfaceManager.DisplayInventoryWindow(condition);
-            }
-        } else {
-            _accessingPlayerInv = condition;
-            _userInterfaceManager.SwitchInventoryScreen(InventoryState.None);
-            _userInterfaceManager.DisplayInventoryWindow(condition);
-        }
-    }
+    
     /// <summary>
     /// Function is designed to drop items to the world from various sources.
     /// </summary>

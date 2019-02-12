@@ -69,10 +69,12 @@ namespace Entity {
         /// </summary>
         /// <param name="target"></param>
         public void SetTarget(Transform target) {
-            _target = target;
-            path = null;
-            if(_target != null)
-                QueueForNextPath();
+            if (target != _target) {
+                _target = target;
+                path = null;
+                if (_target != null)
+                    QueueForNextPath();
+            }
         }
         /// <summary>
         /// Queues up fro the next path

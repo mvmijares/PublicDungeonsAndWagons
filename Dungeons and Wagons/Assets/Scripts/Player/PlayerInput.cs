@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ public class PlayerInput : MonoBehaviour {
     [SerializeField] private bool mouseLeftClick;
     [SerializeField] private float mouseScrollWheel;
     [SerializeField] private Vector2 movement;
+    public bool movementInput;
 
     public float zoomSensitivity = 1;
     public float mouseSensitivity = 10;
@@ -46,16 +48,22 @@ public class PlayerInput : MonoBehaviour {
     public void OnMouseScrollWheel(float value) { mouseScrollWheel = value; }
 
     public void OnEscapeKeyPressed() {
-        openInventory = !openInventory;
-        _player.accessingInterface = openInventory;
-        _gameManager.AccessInventoryInterface(openInventory);
+        if (OnAccessInventoryEvent != null) {
+            OnAccessInventoryEvent(false);
+            openInventory = false;
+        }
     }
 
     public void OnInventoryKeyPressed() {
         openInventory = !openInventory;
+
+        if (OnAccessInventoryEvent != null)
+            OnAccessInventoryEvent(openInventory);
+
         _player.accessingInterface = openInventory;
-        _gameManager.AccessInventoryInterface(openInventory);
     }
+
+    public event Action<bool> OnAccessInventoryEvent;
     #endregion
 
     public void InitializePlayerInput(GameManager gameManager, Player player) {
@@ -80,16 +88,15 @@ public class PlayerInput : MonoBehaviour {
         if (mouseLeftClick)
             CheckForObject();
 
-        if(movement != Vector2.zero && _player.selectedEnemy != null) {
-            _player.playerPathfinder.SetTarget(null);
-            _player.isAttacking = false;
-        }
-        if (_player.isAttacking) {
-            _player.playerAnimationController.SetControllerAnimation(AnimationController.AnimationName.Attacking);
+        if(movement != Vector2.zero) {
+            movementInput = true;
+        } else {
+            movementInput = false;
         }
         
         _player.playerController.moveDirection = movement;
         _player.playerController.running = runKey;
+        
     }
 
     void CheckForObject() {
@@ -120,17 +127,11 @@ public class PlayerInput : MonoBehaviour {
         }
     }
     /// <summary>
-    /// Raycast checks for Objects that we click in the game.
-    /// 
-    /// </summary>
-
-    /// <summary>
     /// Object detection for Enemies
     /// </summary>
     /// <param name="reference"></param>
     void CheckEnemyObject(Transform reference) {
         if (reference.GetComponent<Enemy>()) {
-            _player.clickObject = reference;
             _player.selectedEnemy = reference.GetComponent<Enemy>();
             _player.playerPathfinder.SetTarget(reference);
         }

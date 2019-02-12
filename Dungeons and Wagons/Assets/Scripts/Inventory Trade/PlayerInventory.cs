@@ -8,9 +8,6 @@ using UnityEngine;
 /// Extra functionality that is specific to the player
 /// </summary>
 public class PlayerInventory : Inventory {
-    #region Data
-
-    #endregion
 
     public override void InitializeInventory(GameManager gameManager, Character character) {
         base.InitializeInventory(gameManager, character);
@@ -25,6 +22,5 @@ public class PlayerInventory : Inventory {
     /// <param name="item"></param>
     public override void AddItem(Item item) {
         base.AddItem(item);
-        
     }
 }

@@ -33,7 +33,7 @@ public class ItemButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         _myIcon = GetComponent<Image>();
         _gameManager = gameManager;
         _canvas = canvas;
-        _userInterfaceManager = gameManager.userInterfaceManager;
+        _userInterfaceManager = gameManager.level.userInterfaceManager;
         origin = false;
     }
     public void SetIcon(Sprite sprite) {

@@ -94,13 +94,14 @@ namespace Entity {
             currentBehaviour = GetBehaviour(behaviourType);
         }
 
-        public override void UpdateCharacter() {
-            base.UpdateCharacter();
-            if(currentBehaviour != null) {
-                Debug.Log("Playing NPC Behaviour");
-                currentBehaviour.PlayBehaviour();
+        public override void Update() {
+            base.Update();
+            if (initialized) {
+                if (currentBehaviour != null) {
+                    Debug.Log("Playing NPC Behaviour");
+                    currentBehaviour.PlayBehaviour();
+                }
             }
         }
-
     }
 }

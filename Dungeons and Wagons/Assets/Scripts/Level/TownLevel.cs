@@ -32,9 +32,6 @@ public class TownLevel : Level {
         else {
             player.transform.position = playerSpawnLocation.position;
         }
-
-        _gameManager.userInterfaceManager.InitializeInterfaces(_gameManager);
-
         shopData = new PlayerShopData();
 
         RegisterEvents();
@@ -46,16 +43,16 @@ public class TownLevel : Level {
 
     public override void RegisterEvents() {
         base.RegisterEvents();
-        playerShop.OnPlayerShopEvent += _gameManager.userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
-        playerShop.OnPlayerShopEvent += _gameManager.userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent += _userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent += _userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent += OnPlayerShopEventCalled;
         _gameManager.inputHandler.OnActionKeyPressedEvent += OnActionKeyPressed;
     }
 
     public override void DeregisterEvents() {
         base.DeregisterEvents();
-        playerShop.OnPlayerShopEvent -= _gameManager.userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
-        playerShop.OnPlayerShopEvent -= _gameManager.userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent -= _userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent -= _userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent -= OnPlayerShopEventCalled;
 
         _gameManager.inputHandler.OnActionKeyPressedEvent -= OnActionKeyPressed;
