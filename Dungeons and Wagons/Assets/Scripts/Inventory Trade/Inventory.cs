@@ -29,8 +29,8 @@ public class Inventory : MonoBehaviour {
     public List<ItemData> loadInventory; //items that players start with
     #endregion
 
-    public event Action<Inventory, Item> AddItemEvent;
-
+    public event Action<Item, int> AddItemEvent;
+    public event Action<int> DeleteItemEvent;
     public virtual void InitializeInventory(GameManager gameManager, Character character) {
         _character = character;
         _gameManager = gameManager;
@@ -64,22 +64,22 @@ public class Inventory : MonoBehaviour {
             if (item.isStackable) {
                 if (!CheckItem(item)) {
                     inventory.Add(item);
-                    AddItemEventCall(item);
+                    AddItemEventCall(item, inventory.Count - 1);
                 }
             } else {
                 inventory.Add(item);
-                AddItemEventCall(item);
+                AddItemEventCall(item, inventory.Count - 1);
             }
         } else {
             Debug.Log("There is no more room in inventory");
         }
     }
     //Event Calling
-    void AddItemEventCall(Item item) {
+    void AddItemEventCall(Item item, int slot) {
         if (AddItemEvent != null)
-            AddItemEvent(this, item);
+            AddItemEvent(item, slot);
     }
-
+    
     /// <summary>
     /// returns the item at the slot index
     /// </summary>
@@ -92,8 +92,11 @@ public class Inventory : MonoBehaviour {
     //Registered event through game manager
     public virtual void DeleteItemSlot(int slot) {
         if(inventory.Count > 0) {
-            Item reference = inventory[slot - 1];
-            inventory.RemoveAt(slot - 1);
+            Item reference = inventory[slot];
+            if (DeleteItemEvent != null)
+                DeleteItemEvent(slot);
+
+            inventory.RemoveAt(slot);
         }
     }
     /// <summary>

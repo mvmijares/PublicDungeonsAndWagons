@@ -32,6 +32,7 @@ public class UserInterface : MonoBehaviour {
         _gameManager.inputHandler.OnEscapeKeyPressedEvent -= OnEscapeKeyPressed;
     }
     public virtual void OnEscapeKeyPressed() { }
+    public virtual void CloseInterface() { }
     public virtual void AccessInterface() { }
     public virtual void EnableUserInterface(bool condition) {
         if (interfaceObject) {

@@ -98,7 +98,6 @@ namespace Entity {
             base.Update();
             if (initialized) {
                 if (currentBehaviour != null) {
-                    Debug.Log("Playing NPC Behaviour");
                     currentBehaviour.PlayBehaviour();
                 }
             }

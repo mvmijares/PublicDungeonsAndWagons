@@ -83,6 +83,8 @@ public class UserInterfaceManager : MonoBehaviour {
     [SerializeField]
     private InventoryState _state;
     public InventoryState state { get { return _state; } }
+    private bool _shopInteractable = false;
+    public bool shopInteractable { get { return _shopInteractable; } }
     [SerializeField]
     UserInterface[] userInterfaces;
     #endregion
@@ -168,6 +170,7 @@ public class UserInterfaceManager : MonoBehaviour {
             _gameManager.level.player.playerInput.OnAccessInventoryEvent += _inventoryInterface.EnableUserInterface;
             _gameManager.level.player.playerInput.OnAccessInventoryEvent += OnAccessInventoryEventCalled;
             _gameManager.level.player.inventory.AddItemEvent += _inventoryInterface.AddItemToInventoryInterface;
+            _gameManager.level.player.inventory.DeleteItemEvent += _inventoryInterface.DeleteItemEventCalled;
         }
     }
 
@@ -178,15 +181,20 @@ public class UserInterfaceManager : MonoBehaviour {
         if (_gameManager.level.player) {
             _gameManager.level.player.playerInput.OnAccessInventoryEvent -= _inventoryInterface.EnableUserInterface;
             _gameManager.level.player.playerInput.OnAccessInventoryEvent -= OnAccessInventoryEventCalled;
+            _gameManager.level.player.inventory.DeleteItemEvent -= _inventoryInterface.DeleteItemEventCalled;
         }
         foreach (UserInterface u in userInterfaces) {
             u.DeregisterEvents();
         }
     }
+    public void OnPlayerShopEventCalled(PlayerShopData data) {
+        _shopInteractable = data._playerWithinBox;
+    }
     public void OnAccessInventoryEventCalled(bool condition) {
-        if (condition)
+        if (condition) {
             currentInterface = _inventoryInterface; // default interface to be called
-        else
+            SwitchInventoryScreen(InventoryPageState.Bag);
+        } else
             currentInterface = null; 
     }
     /// <summary>
@@ -194,14 +202,19 @@ public class UserInterfaceManager : MonoBehaviour {
     /// </summary>
     /// <param name="page"></param>
     public void OnSwitchPage(InventoryPageState page) {
-
-        SwitchInventoryScreen(page);
+        if(page == InventoryPageState.Shop) {
+            if(shopInteractable)
+                SwitchInventoryScreen(page);
+        } else {
+            SwitchInventoryScreen(page);
+        }
     }
     /// <summary>
     /// Function to handle switching user interface states in the inventory
     /// </summary>
     /// <param name="page"></param>
     void SwitchInventoryScreen(InventoryPageState page) {
+        currentInterface.CloseInterface();
         switch (page) {
             case InventoryPageState.Bag: {
                     currentInterface = _inventoryInterface;

@@ -44,7 +44,7 @@ public class TownLevel : Level {
     public override void RegisterEvents() {
         base.RegisterEvents();
         playerShop.OnPlayerShopEvent += _userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
-        playerShop.OnPlayerShopEvent += _userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent += _userInterfaceManager.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent += OnPlayerShopEventCalled;
         _gameManager.inputHandler.OnActionKeyPressedEvent += OnActionKeyPressed;
     }
@@ -52,7 +52,7 @@ public class TownLevel : Level {
     public override void DeregisterEvents() {
         base.DeregisterEvents();
         playerShop.OnPlayerShopEvent -= _userInterfaceManager.helpInterface.OnPlayerShopEventCalled;
-        playerShop.OnPlayerShopEvent -= _userInterfaceManager.playerShopInterface.OnPlayerShopEventCalled;
+        playerShop.OnPlayerShopEvent -= _userInterfaceManager.OnPlayerShopEventCalled;
         playerShop.OnPlayerShopEvent -= OnPlayerShopEventCalled;
 
         _gameManager.inputHandler.OnActionKeyPressedEvent -= OnActionKeyPressed;

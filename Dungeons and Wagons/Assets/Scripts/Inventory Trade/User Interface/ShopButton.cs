@@ -13,7 +13,7 @@ public class ShopButton : MonoBehaviour{
     public Image itemImage;
     public int invSlot;
     private bool isDragging;
-    private RectTransform _rectTransform;
+    [SerializeField] private RectTransform _rectTransform;
     public RectTransform rectTransform { get { return _rectTransform; } }
     #endregion
     // Use this for initialization
@@ -28,7 +28,9 @@ public class ShopButton : MonoBehaviour{
         itemImage = transform.GetChild(0).GetComponent<Image>();
         itemImage.color = new Color(0, 0, 0, 0);
     }
-
+    public void SetButtonName(string name) {
+        gameObject.name = name;
+    }
     public void SetBackgroundSprite(Sprite sprite) {
         _myIcon.sprite = sprite;
     }

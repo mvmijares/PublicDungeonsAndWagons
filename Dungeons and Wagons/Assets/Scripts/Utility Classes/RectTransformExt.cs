@@ -11,8 +11,7 @@ static public class RectTransformExt{
         // Convert the rectangle to world corners and grab the top left
         Vector3[] corners = new Vector3[4];
         rt.GetWorldCorners(corners);
-        Vector3 topLeft = corners[0];
-
+        Vector3 topLeft = corners[1];
         // Rescale the size appropriately based on the current Canvas scale
         Vector2 scaledSize = new Vector2(scale.x * rt.rect.size.x, scale.y * rt.rect.size.y);
 

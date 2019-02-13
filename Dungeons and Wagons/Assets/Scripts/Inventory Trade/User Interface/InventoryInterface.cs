@@ -40,9 +40,6 @@ public class InventoryInterface : UserInterface {
         if (inventoryContent == null)
             Debug.Log("There is no scroll view in inventory interface");
 
-
-
-
         _windowStatus = false;
         inventoryButtons = new List<ItemButton>();
         GenerateInventoryScreen(_gameManager.level.player.inventory);
@@ -53,7 +50,7 @@ public class InventoryInterface : UserInterface {
     /// </summary>
     /// <param name="inventory"></param>
     public void GenerateInventoryScreen(Inventory inventory) {
-        int slot = 1;
+        int slot = 0;
         foreach (Item i in inventory.inventory) {
             inventoryButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(i.itemName), slot));
             slot++;
@@ -99,15 +96,15 @@ public class InventoryInterface : UserInterface {
         interfaceObject.SetActive(condition);
         _windowStatus = condition;
     }
-
     /// <summary>
     /// Add buttons, that reference inventory items,to the user interface.
     /// </summary>
     /// <param name="inventory"></param>
     /// <param name="item"></param>
-    public void AddItemToInventoryInterface(Inventory inventory, Item item) {
-        int slot = inventory.currentSize + 1;
-        inventoryButtons.Add(CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(item.itemName), slot));
+    public void AddItemToInventoryInterface(Item item, int slot) {
+        ItemButton newButton = CreateNewItemButton(_gameManager.imageLibrary.GetSpriteReference(item.itemName), slot);
+        if(newButton)
+            inventoryButtons.Add(newButton);
     }
     /// <summary>
     /// Creates a new button 
@@ -140,6 +137,7 @@ public class InventoryInterface : UserInterface {
         }
         return null;
     }
+
     //Event handling on individual buttons
     //Deregister after all logic is handle, then destroy button
     public void ItemDeleteWasCalled(ItemButton iButton, int slot) {
@@ -149,7 +147,12 @@ public class InventoryInterface : UserInterface {
         iButton.ItemOnRightClickEvent -= ItemDeleteWasCalled;
         Destroy(iButton.gameObject);
     }
-
+    public void DeleteItemEventCalled(int slot) {
+        if (GetItemButton(slot)) {
+            Destroy(GetItemButton(slot).gameObject);
+            UpdateSlots();
+        }
+    }
     //Update slot numbers after deleting or sorting
     void UpdateSlots() {
         int slot = 1;

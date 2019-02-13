@@ -9,10 +9,11 @@ using UserInterfaceStates;
 
 public class PlayerShopInterface : UserInterface {
     #region Data
+    private TownLevel level; 
     public GameObject buttonTemplate;
     public Sprite emptySprite; // display a empty box for nothing
     public GameObject playerShopContent; // Will change this later
-
+    public Transform topImage;
     [SerializeField] private ShopButton overlapButton = null;
     [SerializeField] private ShopButton destinationButton = null;
     [SerializeField] private GameObject dragObjectReference = null;
@@ -41,20 +42,33 @@ public class PlayerShopInterface : UserInterface {
         shopButtons = new List<ShopButton>();
         foreach (ShopButton button in buttons) {
             shopButtons.Add(button);
+            button.InitializeButton(_userInterfaceManager, this);
         }
-        initialized = false;
+        int slot = 0;
+        foreach (ShopButton button in shopButtons) {
+            button.SetButtonName("Shop Button " + slot);
+            button.SetInventorySlot(slot);
+            slot++;
+        }
+        level = (TownLevel)gameManager.level;
+
+        initialized = true;
         RegisterEvents();
     }
     public override void AccessInterface() {
         base.AccessInterface();
-        int slot = 0;
+        topImage.gameObject.SetActive(true);
         foreach (ShopButton button in shopButtons) {
-            button.InitializeButton(_userInterfaceManager, this);
-            button.SetBackgroundSprite(emptySprite);
-            button.SetInventorySlot(slot);
-            slot++;
+            button.gameObject.SetActive(true);
         }
-        initialized = true;
+    }
+    public override void CloseInterface() {
+        base.CloseInterface();
+        topImage.gameObject.SetActive(false);
+        foreach (ShopButton button in shopButtons) {
+            button.gameObject.SetActive(false);
+        }
+        
     }
     private void OnDestroy() {
         DeregisterEvents();
@@ -63,9 +77,7 @@ public class PlayerShopInterface : UserInterface {
     private void Update() {
         if (_userInterfaceManager.state == InventoryState.Shop)
             CheckForDragItem();
-    }
-    public void OnPlayerShopEventCalled(PlayerShopData data) {
-        shopInteractable = data._playerWithinBox;
+        
     }
 
     /// <summary>
@@ -88,12 +100,14 @@ public class PlayerShopInterface : UserInterface {
     void CheckForDragItem() {
         if (overlapButton == null) {
             foreach (ShopButton button in shopButtons) {
-                if (RectTransformExt.GetWorldRect(button.rectTransform, Vector2.one).Contains(Input.mousePosition)) {
+                Vector2 localMousePos = button.rectTransform.InverseTransformPoint(Input.mousePosition);
+                if (button.rectTransform.rect.Contains(localMousePos)) {
                     overlapButton = button;
                 }
             }
         } else {
-            if (!RectTransformExt.GetWorldRect(overlapButton.GetComponent<RectTransform>(), Vector2.one).Contains(Input.mousePosition)) {
+            Vector2 localMousePos = overlapButton.rectTransform.InverseTransformPoint(Input.mousePosition);
+            if (!overlapButton.rectTransform.rect.Contains(localMousePos)) {
                 overlapButton = null;
             }
         }
@@ -121,9 +135,10 @@ public class PlayerShopInterface : UserInterface {
             Item newItemCopy = newItem.GetCopy();
             _userInterfaceManager.EnableStackInterface(newItemCopy, itemButton, overlapButton.invSlot);
         } else {
-            _gameManager.playerShop.AddItemToShopInventory(newItem, overlapButton.invSlot);
+            level.playerShop.AddItemToShopInventory(newItem, overlapButton.invSlot);
             //Delete item from player inventory
-            //_gameManager.DeleteItemFromPlayerInventory(itemButton.invSlot);
+            level.player.inventory.DeleteItemSlot(itemButton.invSlot);
+
             DisplayNewButton(itemButton);
         }
     }
